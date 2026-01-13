@@ -10,7 +10,7 @@
 <button onclick="location.href='{% url "form_categoria" %}'"  class="btn btn-primary">Nova Categoria </button>
 
 
-<button onclick="location.href=''"  class="btn btn-primary">Recarregar </button>
+<button onclick="location.href='{% url 'categoria' %}'" class="btn btn-primary">Recarregar</button>
 
 
 <table style="margin-top:15px" class="table table-bordered table-hover">
@@ -33,12 +33,10 @@
             <td> {{item.ordem}} </td>
             <td> 
                 <button onclick="location.href='{% url 'detalhes_categoria' item.id %}'" class="btn btn-info">Detalhes</button>
-    
                 <button onclick="location='{% url 'editar_categoria' item.id %}'" class="btn btn-warning">Alterar</button>
-    
-                <a href="{% url 'remover_categoria' item.id %}" class="btn btn-danger" 
-                    onclick="return confirm('Tem certeza que deseja remover este registro?');">Excluir</a>
-</td> 
+
+                <a href="{% url 'remover_categoria' item.id %}" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja remover este registro?');">Excluir</a>
+            </td> 
         </tr>
         {% endfor %}
      </tbody>
