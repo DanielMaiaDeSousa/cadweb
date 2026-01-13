@@ -1,7 +1,7 @@
 #from django import forms
 #from .models import *
 from django import forms
-from .models import Categoria  # Certifique-se de que o modelo foi importado
+from .models import Categoria, Cliente, Produto  # Certifique-se de que os modelos foram importados
 
 class CategoriaForm(forms.ModelForm):
     class Meta:
@@ -25,3 +25,24 @@ class CategoriaForm(forms.ModelForm):
         if ordem is not None and ordem <= 0:
             raise forms.ValidationError("O campo ordem deve ser maior que zero.")
         return ordem
+    
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['nome', 'cpf', 'datanasc', 'email']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'cpf': forms.TextInput(attrs={'class': 'cpf form-control'}),
+            'datanasc': forms.DateInput(format='%Y-%m-%d', attrs={'class': 'data form-control', 'type': 'date'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+class ProdutoForm(forms.ModelForm):
+    class Meta:
+        model = Produto
+        fields = ['nome', 'preco', 'categoria']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'preco': forms.TextInput(attrs={'class': 'money form-control'}),
+            'categoria': forms.Select(attrs={'class': 'form-control'}),
+        }
