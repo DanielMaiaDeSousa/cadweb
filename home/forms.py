@@ -1,5 +1,3 @@
-#from django import forms
-#from .models import *
 from django import forms
 from .models import Categoria, Cliente, Produto  # Certifique-se de que os modelos foram importados
 
