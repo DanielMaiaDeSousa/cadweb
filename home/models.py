@@ -7,3 +7,32 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nome
+    
+class Cliente(models.Model):
+    nome = models.CharField(max_length=100)
+    cpf = models.CharField(max_length=15, verbose_name='C.P.F')
+    datanasc = models.DateField(verbose_name='Data de Nascimento')
+    
+    def __str__(self):
+        return self.nome
+    
+    @property
+    def datanasc_formatada(self):
+        """Retorna a data de nascimento no formato DD/MM/AAAA."""
+        if self.datanasc.strftime('%d/%m/%Y'):
+            return None
+        
+class Produto(models.Model):
+    nome = models.CharField(max_length=100)
+    preco = models.DecimalField(max_digits=10, decimal_places=2)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    img_base6 = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nome
+    
+    @property
+    def preco_formatado(self):
+        """Retorna o preço formatado em moeda brasileira."""
+        locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+        return locale.currency(self.preco, grouping=True)           
