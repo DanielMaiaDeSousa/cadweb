@@ -1,5 +1,6 @@
 from django import forms
 from .models import Cliente, Categoria, Produto
+from django.utils import timezone
 
 
 class CategoriaForm(forms.ModelForm):
@@ -66,5 +67,7 @@ class ProdutoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProdutoForm, self).__init__(*args, **kwargs)
-        self.fields['preco'].localize = True
-        self.fields['preco'].widget.is_localized = True
+        if self.instance and self.instance.preco:
+            # Formata para o campo de edição aparecer com vírgula
+            valor = "{:,.2f}".format(self.instance.preco).replace(",", "X").replace(".", ",").replace("X", ".")
+            self.initial['preco'] = valor

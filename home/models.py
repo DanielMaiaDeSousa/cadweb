@@ -20,8 +20,9 @@ class Cliente(models.Model):
     @property
     def datanasc_formatada(self):
         """Retorna a data de nascimento no formato DD/MM/AAAA."""
-        if self.datanasc.strftime('%d/%m/%Y'):
-            return None
+        if self.datanasc:
+            return self.datanasc.strftime('%d/%m/%Y')
+        return ""
         
 class Produto(models.Model):
     nome = models.CharField(max_length=100)
@@ -34,6 +35,8 @@ class Produto(models.Model):
     
     @property
     def preco_formatado(self):
-        """Retorna o preço formatado em moeda brasileira."""
-        locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-        return locale.currency(self.preco, grouping=True)           
+        """Formata o preço para R$ 0.000,00 sem usar locale."""
+        if self.preco:
+            valor = "{:,.2f}".format(self.preco).replace(",", "X").replace(".", ",").replace("X", ".")
+            return f"R$ {valor}"
+        return "R$ 0,00"           

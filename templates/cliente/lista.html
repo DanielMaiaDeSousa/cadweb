@@ -1,37 +1,44 @@
 {% extends 'base.html' %}
 
-{% block titulo_conteudo  %} Listagem de Cliente {% endblock %}
+{% block titulo_conteudo %} Listagem de Cliente {% endblock %}
 
-{% block conteudo  %}
+{% block conteudo %}
 
-<button onclick="location.href=''"  class="btn btn-primary">Novo Cliente </button>
+<button onclick="location.href='{% url 'form_cliente' %}'" class="btn btn-primary">Novo Cliente</button>
 
-<button onclick="location.href=''"  class="btn btn-primary">Recarregar </button>
+<button onclick="location.href='{% url 'cliente' %}'" class="btn btn-primary">Recarregar</button>
 
 <table style="margin-top:15px" class="table table-bordered table-hover">
-    <thead class="thead-dark
-
-        ">
+    <thead class="thead-dark">
         <tr>
             <th scope="col">ID</th>
             <th scope="col">Nome</th>
             <th scope="col">CPF</th>
-            <th scope="col">Data de Nascimento</th>  
-        </tr>
+            <th scope="col">Data de Nascimento</th>
+            <th scope="col">Ações</th> </tr>
     </thead>
     <tbody>
         {% for cliente in lista %}
         <tr>
-            <td>{{cliente.id}}</td>
-            <td> {{cliente.nome}} </td>
-            <td> {{cliente.cpf}} </td>
-            <td> {{cliente.datanascimento}} </td>
+            <td>{{ cliente.id }}</td>
+            <td>{{ cliente.nome }}</td>
+            <td>{{ cliente.cpf }}</td>
+            <td>{{ cliente.datanasc_formatada }}</td>
             <td> 
-                <button onclick="location='#'" class="btn btn-info">Detalhes </button>
-                <button onclick="location='#'"  class="btn btn-warning">Alterar </button>
-                <a href="#" class="btn btn-danger" 
-                onclick="return confirm('Tem certeza que deseja remover este registro?');">Excluir</a>
+                <button onclick="location='{% url 'detalhes_cliente' cliente.id %}'" class="btn btn-info">Detalhes</button>
+                
+                <button onclick="location='{% url 'editar_cliente' cliente.id %}'" class="btn btn-warning">Alterar</button>
+                
+                <a href="{% url 'remover_cliente' cliente.id %}" class="btn btn-danger" 
+                   onclick="return confirm('Tem certeza que deseja remover este registro?');">Excluir</a>
             </td> 
         </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">Nenhum cliente cadastrado.</td>
+        </tr>
         {% endfor %}
-     </tbody>
+    </tbody>
+</table>
+
+{% endblock %}

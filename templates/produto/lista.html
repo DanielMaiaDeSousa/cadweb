@@ -5,9 +5,8 @@
 {% block conteudo %} 
 
 <div class="barrabotoes">
-<button onClick="location='{% url "form_produto" %}'" type="button" class="btn btn-primary btn-sm">Inserir Novo</button>
-<button onClick="location='{% url "produto" %}'" type="button" class="btn btn-primary btn-sm">Recarregar</button>
-
+    <button onClick="location='{% url "form_produto" %}'" type="button" class="btn btn-primary btn-sm">Inserir Novo</button>
+    <button onClick="location='{% url "produto" %}'" type="button" class="btn btn-primary btn-sm">Recarregar</button>
 </div>
 
 <table class="table table-hover">
@@ -15,9 +14,9 @@
       <tr>
         <th>ID</th>
         <th>Nome</th>
-        <th>Preço(R$)</th>
+        <th>Preço</th>
         <th>Categoria</th>
-         <th>Ações</th>
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -25,18 +24,23 @@
       <tr>
         <td>{{ produto.id }}</td>
         <td>{{ produto.nome }}</td>
-        <td>{{ produto.preco}}</td>
-        <td>{{ produto.categoria }}</td>
+        <td>{{ produto.preco_formatado }}</td>
+        <td>{{ produto.categoria.nome }}</td>
         <td>
-          <button onclick="location='#'" class="btn btn-info btn-sm">Detalhes </button>
+          <button onclick="location='{% url 'detalhes_produto' produto.id %}'" class="btn btn-info btn-sm">Detalhes</button>
+          
           <a href="{% url 'editar_produto' produto.id %}" class="btn btn-warning btn-sm">Editar</a>
+          
           <a href="{% url 'remover_produto' produto.id %}" class="btn btn-danger btn-sm" 
           onclick="return confirm('Tem certeza que deseja remover este registro?');">Remover</a>
         </td>
       </tr>
-      {% endfor %}
+    {% empty %}
+      <tr>
+        <td colspan="5" class="text-center">Nenhum produto cadastrado.</td>
+      </tr>
+    {% endfor %}
     </tbody>
-  </table>
-
+</table>
 
 {% endblock conteudo %}

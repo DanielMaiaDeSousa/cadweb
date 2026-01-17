@@ -86,6 +86,18 @@ def remover_cliente(request, id):
     messages.success(request, 'Cliente removido!')
     return redirect('cliente')
 
+def detalhes_cliente(request, id):
+    # Procura o cliente pelo ID. Se não existir, dá erro 404.
+    cliente_obj = get_object_or_404(Cliente, pk=id)
+    return render(request, 'cliente/detalhes.html', {'item': cliente_obj})
+
+def remover_cliente(request, id):
+    # Procura o cliente para remover.
+    cliente_obj = get_object_or_404(Cliente, pk=id)
+    cliente_obj.delete()
+    messages.success(request, 'Cliente removido com sucesso!')
+    return redirect('cliente')
+
 
 # --- PRODUTOS ---
 
@@ -117,6 +129,18 @@ def editar_produto(request, id):
     return render(request, 'produto/form.html', {'form': form})
 
 def remover_produto(request, id):
+    produto_obj = get_object_or_404(Produto, pk=id)
+    produto_obj.delete()
+    messages.success(request, 'Produto removido com sucesso!')
+    return redirect('produto')
+
+def detalhes_produto(request, id):
+    # Procura o produto. Se não existir, dá erro 404.
+    produto_obj = get_object_or_404(Produto, pk=id)
+    return render(request, 'produto/detalhes.html', {'item': produto_obj})
+
+def remover_produto(request, id):
+    # Procura o produto para remover.
     produto_obj = get_object_or_404(Produto, pk=id)
     produto_obj.delete()
     messages.success(request, 'Produto removido com sucesso!')
