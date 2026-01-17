@@ -35,6 +35,11 @@ class ClienteForm(forms.ModelForm):
             'datanasc': forms.DateInput(format='%d/%m/%Y', attrs={'class': 'data form-control', 'placeholder': 'Data de Nascimento (DD/MM/AAAA)'}),
             
         }
+    def clean_datanasc(self):
+        datanasc = self.cleaned_data.get('datanasc')
+        if datanasc and datanasc > timezone.now().date():
+            raise forms.ValidationError("A data de nascimento não pode ser maior que a data atual.")
+        return datanasc
         
 class ProdutoForm(forms.ModelForm):
     class Meta:
