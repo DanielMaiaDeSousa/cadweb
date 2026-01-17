@@ -1,7 +1,5 @@
 from django import forms
 from .models import Cliente, Categoria, Produto
-import locale
-locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
 
 class CategoriaForm(forms.ModelForm):
