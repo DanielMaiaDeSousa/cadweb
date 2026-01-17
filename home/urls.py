@@ -14,7 +14,6 @@ urlpatterns = [
     
     # --- PRODUTOS ---
     path('produto/', views.produto, name="produto"),
-    # ADICIONE ESTA LINHA:
     path('produto/form/', views.form_produto, name="form_produto"),
     path('produto/editar/<int:id>/', views.editar_produto, name="editar_produto"),
     path('produto/remover/<int:id>/', views.remover_produto, name='remover_produto'),

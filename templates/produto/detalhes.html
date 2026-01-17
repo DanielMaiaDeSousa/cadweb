@@ -1,0 +1,3 @@
+def detalhes_produto(self, request, id):
+    produto = get_object_or_404(Produto, pk=id)
+    return render(request, 'produto/detalhes.html', {'item': produto})

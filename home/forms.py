@@ -44,11 +44,27 @@ class ClienteForm(forms.ModelForm):
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        # Certifique-se de que 'img_base64' está na lista de campos:
-        fields = ['nome', 'preco', 'categoria', 'img_base64'] 
+        fields = ['nome', 'preco', 'categoria','img_base64']
         widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'preco': forms.TextInput(attrs={'class': 'money form-control'}),
             'categoria': forms.Select(attrs={'class': 'form-control'}),
-            'img_base64': forms.HiddenInput(), # Recomendado para Base64
+            'nome':forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome'}),
+            'img_base64': forms.HiddenInput(), 
+            # a classe money mascara a entreda de valores monetários, está em base.html
+            #  jQuery Mask Plugin
+            'preco':forms.TextInput(attrs={
+                'class': 'money form-control',
+                'maxlength': 500,
+                'placeholder': '0.000,00'
+            }),
         }
+        
+        labels = {
+            'nome': 'Nome do Produto',
+            'preco': 'Preço do Produto',
+        }
+
+
+    def __init__(self, *args, **kwargs):
+        super(ProdutoForm, self).__init__(*args, **kwargs)
+        self.fields['preco'].localize = True
+        self.fields['preco'].widget.is_localized = True
