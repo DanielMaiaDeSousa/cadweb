@@ -3,18 +3,26 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name="index"),
+    
+    # --- CATEGORIAS ---
     path('categoria/', views.categoria, name="categoria"),
-    path('cliente/', views.cliente, name="cliente"),
-    path('produto/', views.produto, name="produto"),    path('salvar_categoria/', views.salvar_categoria, name="salvar_categoria"),
-    path('salvar_cliente/', views.salvar_cliente, name="salvar_cliente"),
-    path('salvar_produto/', views.salvar_produto, name="salvar_produto"),
-    path('editar_categoria/<int:id>/', views.editar_categoria, name="editar_categoria"),
-    path('editar_cliente/<int:id>/', views.editar_cliente, name="editar_cliente"),
-    path('editar_produto/<int:id>/', views.editar_produto, name="editar_produto"),
-    path('atualizar_categoria/<int:id>/', views.atualizar_categoria, name="atualizar_categoria"),
-    path('atualizar_cliente/<int:id>/', views.atualizar_cliente, name="atualizar_cliente"),
-    path('atualizar_produto/<int:id>/', views.atualizar_produto, name="atualizar_produto"),
-    path('deletar_categoria/<int:id>/', views.deletar_categoria, name="deletar_categoria"),
-    path('deletar_cliente/<int:id>/', views.deletar_cliente, name="deletar_cliente"),
-    path('deletar_produto/<int:id>/', views.deletar_produto, name="deletar_produto"),   
+    # ADICIONE ESTA LINHA:
+    path('categoria/form/', views.form_categoria, name="form_categoria"), 
+    path('categoria/editar/<int:id>/', views.editar_categoria, name="editar_categoria"),
+    path('categoria/detalhes/<int:id>/', views.detalhes_categoria, name='detalhes_categoria'),
+    path('categoria/remover/<int:id>/', views.remover_categoria, name='remover_categoria'),
+    
+    # --- PRODUTOS ---
+    path('produto/', views.produto, name="produto"),
+    # ADICIONE ESTA LINHA:
+    path('produto/form/', views.form_produto, name="form_produto"),
+    path('produto/editar/<int:id>/', views.editar_produto, name="editar_produto"),
+    path('produto/remover/<int:id>/', views.remover_produto, name='remover_produto'),
+    
+    # --- CLIENTES --- 
+    path('cliente/', views.cliente, name="cliente"),   
+    # ADICIONE ESTA LINHA:
+    path('cliente/form/', views.form_cliente, name="form_cliente"),
+    path('cliente/editar/<int:id>/', views.editar_cliente, name="editar_cliente"),
+    path('cliente/remover/<int:id>/', views.remover_cliente, name='remover_cliente'),
 ]

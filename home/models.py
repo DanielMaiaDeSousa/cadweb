@@ -24,9 +24,10 @@ class Cliente(models.Model):
         
 class Produto(models.Model):
     nome = models.CharField(max_length=100)
-    preco = models.DecimalField(max_digits=10, decimal_places=2)
+    # Certifique-se de que a linha abaixo esteja completa e correta:
+    preco = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True) 
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
-    img_base6 = models.TextField(blank=True, null=True)
+    img_base64 = models.TextField(blank=True)
 
     def __str__(self):
         return self.nome

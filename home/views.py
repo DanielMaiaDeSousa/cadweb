@@ -28,22 +28,27 @@ def form_categoria(request):
     return render(request, 'categoria/form.html', {'form': form})
 
 def editar_categoria(request, id):
-    categoria_obj = get_object_or_404(Categoria, pk=id)
-    if request.method == 'POST':    
-        form = CategoriaForm(request.POST, instance=categoria_obj)
+    categoria = Categoria.objects.get(pk=id)
+    if request.method == 'POST':
+        # combina os dados do formulário submetido com a instância do objeto existente, permitindo editar seus valores.
+        form = CategoriaForm(request.POST, instance=categoria)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Categoria atualizada!')
-            return redirect('categoria')
-    else:    
-        form = CategoriaForm(instance=categoria_obj)
-    return render(request, 'categoria/form.html', {'form': form})
+            categoria = form.save() # save retorna o objeto salvo
+            return redirect('categoria') # redireciona para a listagem
+    else:
+         form = CategoriaForm(instance=categoria)
+    return render(request, 'categoria/formulario.html', {'form': form,})
+
 
 def remover_categoria(request, id):
     categoria_obj = get_object_or_404(Categoria, pk=id)
     categoria_obj.delete()
     messages.success(request, 'Categoria removida com sucesso!')
     return redirect('categoria')
+
+def detalhes_categoria(request, id):
+    categoria = get_object_or_404(Categoria, pk=id)
+    return render(request, 'categoria/detalhes.html', {'item': categoria})
 
 # --- CLIENTES ---
 
@@ -85,3 +90,37 @@ def remover_cliente(request, id):
 def produto(request):
     contexto = {'lista': Produto.objects.all().order_by('-id')}
     return render(request, 'produto/lista.html', contexto)
+
+def form_produto(request):
+    if request.method == 'POST':
+        form = ProdutoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Produto salvo com sucesso!')
+            return redirect('produto')
+    else:
+        form = ProdutoForm()
+    return render(request, 'produto/form.html', {'form': form})
+
+def editar_produto(request, id):
+    # Busca o produto pelo ID ou retorna 404 se não existir
+    produto_obj = get_object_or_404(Produto, pk=id)
+    
+    if request.method == 'POST':
+        # Passa os dados do POST e a instância do produto existente para o formulário
+        form = ProdutoForm(request.POST, instance=produto_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Produto atualizado com sucesso!')
+            return redirect('produto')
+    else:
+        # Carrega o formulário preenchido com os dados atuais do produto
+        form = ProdutoForm(instance=produto_obj)
+    
+    return render(request, 'produto/form.html', {'form': form})
+
+def remover_produto(request, id):
+    produto_obj = get_object_or_404(Produto, pk=id)
+    produto_obj.delete()
+    messages.success(request, 'Produto removido com sucesso!')
+    return redirect('produto')

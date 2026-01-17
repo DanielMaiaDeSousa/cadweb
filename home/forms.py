@@ -41,10 +41,11 @@ class ClienteForm(forms.ModelForm):
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        fields = ['nome', 'preco', 'categoria', 'img_base64']
+        # Certifique-se de que 'img_base64' está na lista de campos:
+        fields = ['nome', 'preco', 'categoria', 'img_base64'] 
         widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Produto'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'preco': forms.TextInput(attrs={'class': 'money form-control'}),
             'categoria': forms.Select(attrs={'class': 'form-control'}),
-            'preco': forms.NumberInput(attrs={'class': 'money form-control', 'placeholder': 'Preço do Produto'}),
-            'img_base64': forms.FileInput(attrs={'class': 'form-control'}),
+            'img_base64': forms.HiddenInput(), # Recomendado para Base64
         }
