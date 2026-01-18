@@ -10,6 +10,18 @@ class CategoriaForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'ordem': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+        
+    def clean_ordem(self):
+        nome = self.cleaned_data.get('nome')
+        if len(nome) < 3:   
+            raise forms.ValidationError("O nome deve ter pelo menos 3 caracteres.")
+        return nome
+    
+    def clean_ordem(self):
+        ordem = self.cleaned_data.get('ordem')
+        if ordem is not None and ordem < 0:
+            raise forms.ValidationError("A ordem deve ser um número positivo.")
+        return ordem
 
 # home/forms.py
 
@@ -39,9 +51,6 @@ class ClienteForm(forms.ModelForm):
 
 # home/forms.py
 # home/forms.py
-from django import forms
-from .models import Categoria, Cliente, Produto
-from django.utils import timezone
 
 class ProdutoForm(forms.ModelForm):
     class Meta:
@@ -70,7 +79,8 @@ class ProdutoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProdutoForm, self).__init__(*args, **kwargs)
-        if self.instance and self.instance.preco:
-            # Formata para o campo de edição (Tarefa do professor)
-            valor = "{:,.2f}".format(self.instance.preco).replace(",", "X").replace(".", ",").replace("X", ".")
-            self.initial['preco'] = valor
+        self.fields ['preco'].localize = True
+        self.fields ['preco'].widget.is_localized = True
+        
+        
+        
