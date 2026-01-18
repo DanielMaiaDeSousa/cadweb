@@ -1,5 +1,3 @@
-import locale
-from django.db import models
 from django.db import models
 
 class Categoria(models.Model):
@@ -35,8 +33,8 @@ class Produto(models.Model):
     
     @property
     def preco_formatado(self):
-        """Formata o preço para R$ 0.000,00 sem usar locale."""
+        """Formata o preço para R$ sem usar locale (seguro para Vercel)."""
         if self.preco:
             valor = "{:,.2f}".format(self.preco).replace(",", "X").replace(".", ",").replace("X", ".")
             return f"R$ {valor}"
-        return "R$ 0,00"           
+        return "R$ 0,00"

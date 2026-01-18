@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block titulo_conteudo %} Formulário de Cliente {% endblock %}
+
+{% block conteudo %}  
+
+<form method="post">
+    {% csrf_token %}
+    
+    {{ form.as_p }}
+    
+    <div class="mt-4">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <button onclick="location='{% url "cliente" %}'" class="btn btn-secondary" type="button">Voltar</button>
+    </div>
+</form>   
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+        // Garante que as máscaras sejam aplicadas ao carregar a página
+        $('.cpf').mask('000.000.000-00');
+        $('.data').mask('00/00/0000');
+    });
+</script>
+{% endblock javascript %}
