@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block titulo_conteudo %} Detalhes do Pedido #{{ pedido.id }} {% endblock %}
+
+{% block conteudo %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <p><strong>Cliente:</strong> {{ pedido.cliente.nome }}</p>
+    </div>
+    <div class="col-md-4">
+        <p><strong>Data:</strong> {{ pedido.data_pedidof }}</p>
+    </div>
+    <div class="col-md-4">
+        <p><strong>Status:</strong> <span class="badge bg-info">{{ pedido.get_status_display }}</span></p>
+    </div>
+</div>
+
+<hr>
+
+<h5 class="mb-3">Adicionar Produto ao Pedido</h5>
+<form method="post" class="row g-3 align-items-end">
+    {% csrf_token %}
+    
+    <div class="col-md-6">
+        <label for="id_produto_desc" class="form-label">Produto (Autocomplete):</label>
+        <input type="text" id="id_produto_desc" 
+               class="autocomplete form-control" 
+               data-url="{% url 'buscar_dados' 'home.Produto' %}" 
+               data-hidden="#id_produto"
+               placeholder="Digite o nome do produto...">
+        {{ form.produto }} </div>
+
+    <div class="col-md-2">
+        <label class="form-label">Quantidade:</label>
+        {{ form.qtde }}
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label">Preço Unitário:</label>
+        {{ form.preco }}
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-success w-100">
+            <i class="fas fa-plus"></i> Adicionar
+        </button>
+    </div>
+</form>
+
+<hr class="my-4">
+
+<h5 class="mb-3">Itens do Pedido</h5>
+<div class="table-responsive">
+    <table class="table table-hover table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Produto</th>
+                <th>Qtd</th>
+                <th>Preço Unitário</th>
+                <th>Total</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in pedido.itempedido_set.all %}
+            <tr>
+                <td>{{ item.produto.nome }}</td>
+                <td>{{ item.qtde }}</td>
+                <td>{{ item.preco }}</td>
+                <td></td>
+                <td class="text-center">
+                    <a href="{% url 'remover_item_pedido' item.id %}" 
+                        class="btn btn-danger btn-sm"
+                        onclick="return confirm('Tem certeza que deseja remover este produto do pedido?')">
+                        <i class="fas fa-trash"></i> Remover
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'pedido' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar para Lista
+    </a>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function() {
+        // Ativa o autocomplete no campo de produto [cite: 15]
+        $('.autocomplete').each(function() {
+            autoComplete(this);
+        });
+
+        // Aplica a máscara de dinheiro no preço [cite: 16]
+        $('.money').mask('#.##0,00', {reverse: true});
+    });
+</script>
+{% endblock %}

@@ -31,6 +31,10 @@
                 
                 <a href="{% url 'remover_cliente' cliente.id %}" class="btn btn-danger" 
                    onclick="return confirm('Tem certeza que deseja remover este registro?');">Excluir</a>
+
+                <a href="{% url 'novo_pedido' cliente.id %}" class="btn btn-primary btn-sm">
+                   <i class="fas fa-plus"></i> Novo Pedido
+                </a>
             </td> 
         </tr>
         {% empty %}

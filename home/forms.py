@@ -1,7 +1,8 @@
 from django import forms
-from .models import Categoria, Cliente, Produto
+from .models import Categoria, Cliente, Produto, Estoque, ItemPedido
 from django.utils import timezone
 
+# --- CATEGORIA ---
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
@@ -11,9 +12,9 @@ class CategoriaForm(forms.ModelForm):
             'ordem': forms.NumberInput(attrs={'class': 'form-control'}),
         }
         
-    def clean_ordem(self):
+    def clean_nome(self): # Corrigido de clean_ordem para clean_nome
         nome = self.cleaned_data.get('nome')
-        if len(nome) < 3:   
+        if nome and len(nome) < 3:   
             raise forms.ValidationError("O nome deve ter pelo menos 3 caracteres.")
         return nome
     
@@ -23,9 +24,7 @@ class CategoriaForm(forms.ModelForm):
             raise forms.ValidationError("A ordem deve ser um número positivo.")
         return ordem
 
-# home/forms.py
-
-# home/forms.py
+# --- CLIENTE ---
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
@@ -33,7 +32,6 @@ class ClienteForm(forms.ModelForm):
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'cpf': forms.TextInput(attrs={'class': 'cpf form-control', 'placeholder': '000.000.000-00'}),       
-            # Mudamos para TextInput para a máscara .data do seu base.html funcionar
             'datanasc': forms.TextInput(attrs={
                 'class': 'data form-control', 
                 'placeholder': 'DD/MM/AAAA'
@@ -41,49 +39,30 @@ class ClienteForm(forms.ModelForm):
         }
 
     def clean_datanasc(self):
-        # TAREFA: Impede data de nascimento no futuro
         datanasc = self.cleaned_data.get('datanasc')
         if datanasc and datanasc > timezone.now().date():
             raise forms.ValidationError("A data de nascimento não pode ser no futuro.")
         return datanasc
 
-# No arquivo home/forms.py
-
-# home/forms.py
-# home/forms.py
-
+# --- PRODUTO ---
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
         fields = ['nome', 'preco', 'categoria', 'img_base64']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            # OBRIGATÓRIO: usar TextInput para a máscara não conflitar
             'preco': forms.TextInput(attrs={'class': 'money form-control'}),
-            'categoria': forms.HiddenInput(), # Campo escondido para o ID da categoria
+            'categoria': forms.HiddenInput(), # Atividade 15: Autocomplete 
             'img_base64': forms.HiddenInput(),
         }
 
-    def clean_preco(self):
-        # Pega o valor que veio do formulário (ex: "1.250,50")
-        preco = self.request.POST.get('preco') if hasattr(self, 'request') else self.cleaned_data.get('preco')
-        
-        # Se o preco vier como string do POST, limpamos a formatação brasileira
-        if isinstance(preco, str):
-            preco = preco.replace('.', '').replace(',', '.')
-        
-        try:
-            return float(preco)
-        except (ValueError, TypeError):
-            raise forms.ValidationError("Formato de preço inválido.")
-
     def __init__(self, *args, **kwargs):
         super(ProdutoForm, self).__init__(*args, **kwargs)
-        self.fields ['preco'].localize = True
-        self.fields ['preco'].widget.is_localized = True
+        # Ativa localização para tratar vírgulas e pontos nativamente
+        self.fields['preco'].localize = True
+        self.fields['preco'].widget.is_localized = True
 
-# ---ESTOQUE ---
-from .models import Estoque
+# --- ESTOQUE (Atividade 14) ---
 class EstoqueForm(forms.ModelForm):
     class Meta:
         model = Estoque
@@ -91,6 +70,15 @@ class EstoqueForm(forms.ModelForm):
         widgets = {
             'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
         }
-        
-        
-        
+
+# --- ITEM PEDIDO (Atividade 17) ---
+class ItemPedidoForm(forms.ModelForm):
+    class Meta:
+        model = ItemPedido
+        fields = ['produto', 'qtde', 'preco']
+        widgets = {
+            # Atividade 17: O campo produto é hidden para o autocomplete 
+            'produto': forms.HiddenInput(), 
+            'qtde': forms.NumberInput(attrs={'class': 'form-control'}),
+            'preco': forms.TextInput(attrs={'class': 'money form-control'}),
+        }

@@ -58,3 +58,39 @@ def ajustar_estoque(request, id):
         messages.success(request, 'Estoque atualizado!')
         return redirect('produto')
     return render(request, 'produto/estoque.html', {'item': produto, 'estoque': estoque})
+
+# --- PEDIDOS ---
+    
+# home/models.py
+from django.db import models
+
+class Pedido(models.Model):
+    # Status possíveis para o pedido [cite: 314]
+    STATUS_CHOICES = [
+        (1, 'Novo'),
+        (2, 'Em Andamento'),
+        (3, 'Concluído'),
+        (4, 'Cancelado'),
+    ]
+
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    # Relacionamento muitos-para-muitos com Produto através de ItemPedido [cite: 314]
+    produtos = models.ManyToManyField(Produto, through='ItemPedido')
+    data_pedido = models.DateTimeField(auto_now_add=True) # Data automática [cite: 314, 315]
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+
+    @property
+    def data_pedidof(self):
+        """Retorna a data formatada para exibição [cite: 317, 318]"""
+        if self.data_pedido:
+            return self.data_pedido.strftime('%d/%m/%Y %H:%M')
+        return None
+
+class ItemPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    qtde = models.PositiveIntegerField()
+    preco = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.produto.nome} (Qtd: {self.qtde})"

@@ -29,4 +29,9 @@ urlpatterns = [
     
     path('buscar_dados/<str:app_model>/', views.buscar_dados, name='buscar_dados'),
     path('produto/estoque/<int:id>/', views.ajustar_estoque, name='ajustar_estoque'),
+    
+    path('pedido/', views.pedido, name='pedido'),
+    path('novo_pedido/<int:cliente_id>/', views.novo_pedido, name='novo_pedido'),
+    path('detalhes_pedido/<int:id>/', views.detalhes_pedido, name='detalhes_pedido'),
+    path('pedido/remover-item/<int:id>/', views.remover_item_pedido, name='remover_item_pedido'),
 ]
