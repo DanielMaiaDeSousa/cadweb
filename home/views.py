@@ -14,8 +14,6 @@ def categoria(request):
     }
     return render(request, 'categoria/lista.html', contexto)
 
-
-
 def form_categoria(request):
     if request.method == 'POST':
         form = CategoriaForm(request.POST)

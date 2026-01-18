@@ -118,7 +118,7 @@ USE_L10N = True #Habilita a localização (l10n = localization) no Django, ou se
 USE_THOUSAND_SEPARATOR = True #Define se o Django deve usar o separador de milhar ao renderizar números.
 DECIMAL_SEPARATOR = ',' #Especifica o caractere que deve ser usado como separador decimal ao formatar números.
 THOUSAND_SEPARATOR = '.' #Define o separador de milhar a ser usado. Aqui, o ponto . será usado como separador de milhar, por exemplo, 1.234.567.
-
+DATE_INPUT_FORMATS = ['%d/%m/%Y']
 #
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -158,4 +158,3 @@ LOGGING = {
         },
     },
 }
-
