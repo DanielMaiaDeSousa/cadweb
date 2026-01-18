@@ -60,7 +60,7 @@ class ProdutoForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             # OBRIGATÓRIO: usar TextInput para a máscara não conflitar
             'preco': forms.TextInput(attrs={'class': 'money form-control'}),
-            'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'categoria': forms.HiddenInput(), # Campo escondido para o ID da categoria
             'img_base64': forms.HiddenInput(),
         }
 
@@ -81,6 +81,16 @@ class ProdutoForm(forms.ModelForm):
         super(ProdutoForm, self).__init__(*args, **kwargs)
         self.fields ['preco'].localize = True
         self.fields ['preco'].widget.is_localized = True
+
+# ---ESTOQUE ---
+from .models import Estoque
+class EstoqueForm(forms.ModelForm):
+    class Meta:
+        model = Estoque
+        fields = ['quantidade']
+        widgets = {
+            'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
         
         
         

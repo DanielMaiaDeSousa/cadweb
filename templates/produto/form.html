@@ -5,15 +5,37 @@
 {% block conteudo %} 
 <form method="post">
     {% csrf_token %}    
-    {{ form.as_p }}
     
-    <fieldset class="fieldset">
-        <label for="imagem">Imagem:</label>
+    <div class="mb-3">
+        {{ form.nome.label_tag }}
+        {{ form.nome }}
+    </div>
+
+    <div class="mb-3">
+        {{ form.preco.label_tag }}
+        {{ form.preco }}
+    </div>
+
+    <div class="mb-3">
+        <label for="id_categoria_desc">Categoria:</label>
+        <input type="text" 
+               id="id_categoria_desc" 
+               class="autocomplete form-control" 
+               data-url="{% url 'buscar_dados' 'home.categoria' %}" 
+               data-hidden="#id_categoria" 
+               value="{{ form.instance.categoria.nome|default_if_none:'' }}">
+        
+        {{ form.categoria }}
+    </div>
+
+    <fieldset class="fieldset border p-3 mb-3">
+        <legend class="w-auto px-2">Imagem</legend>
+        
         <input type="hidden" 
             id="img_base64"  
             class="img_init" 
             data-canvas="imageCanvas" 
-            value="{{form.instance.img_base64}}" 
+            value="{{ form.instance.img_base64|default_if_none:'' }}" 
             name="img_base64">
 
         <input type="file" id="imagem" 
@@ -22,61 +44,53 @@
             class="img_upload form-control" 
             accept="image/*"><br>
 
-        <canvas class="canvas"  id="imageCanvas" width="200" height="200"></canvas><br>
-
+        <div class="text-center">
+            <canvas class="canvas border" id="imageCanvas" width="200" height="200"></canvas>
+        </div>
     </fieldset>
 
-    <p>
-    
-</p>
-
-    <button class="btn btn-primary btn-sm" type="submit">Salvar</button>
-
-
-    
+    <div class="mt-3">
+        <button class="btn btn-primary" type="submit">
+            <i class="fas fa-save"></i> Salvar Produto
+        </button>
+        <a href="{% url 'produto' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
 
 </form>
-
 {% endblock conteudo %}
 
 {% block javascript %}
 <script>
-
-
     $(document).ready(function() {
+        // Inicializa o Autocomplete nos campos com a classe .autocomplete
+        $('.autocomplete').each(function() {
+            autoComplete(this); 
+        });
 
-        // Configura inicialização das imagens base64 para todo campo da classe img_init
+        // Configura inicialização das imagens base64
         $('.img_init').each(function() {
             const initialImageBase64 = $(this).val();
             const target_canvas = $(this).data('canvas');
             if (initialImageBase64) {
-                loadImage(initialImageBase64,target_canvas);
+                loadImage(initialImageBase64, target_canvas);
             }
         });
         
-        // Evento acionado quando uma nova imagem é selecionada
+        // Evento para upload de imagem
         $('.img_upload').on('change', function(event) {
-            
-            const imagemInput = this.files[0]; // Pega o arquivo selecionado
-            var hidden = $(this).data('hidden');  // Pega o campo hidden associado ao file input
+            const imagemInput = this.files[0];
+            var hidden = $(this).data('hidden');
             if (imagemInput) {
                 const reader = new FileReader();
-                reader.readAsDataURL(imagemInput); // Converte a imagem para base64
-
+                reader.readAsDataURL(imagemInput);
                 reader.onload = function() {
-                    const imgBase64 = reader.result; // O resultado da conversão
-                    $('#'+hidden).val(imgBase64); // Seta o valor base64 no campo hidden associado ao file input
-                    var canvasTarget = $('#'+hidden).data('canvas'); // pega o canvas associado ao compo hidden
-                    // Exibe a nova imagem no canvas
-                    loadImage(imgBase64,canvasTarget);
-                };
-
-                reader.onerror = function(error) {
-                    console.log('Erro ao converter a imagem: ', error);
+                    const imgBase64 = reader.result;
+                    $('#' + hidden).val(imgBase64);
+                    var canvasTarget = $('#' + hidden).data('canvas');
+                    loadImage(imgBase64, canvasTarget);
                 };
             }
         });
     });
 </script>
-
 {% endblock javascript %}

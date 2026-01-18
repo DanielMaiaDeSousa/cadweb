@@ -1,46 +1,45 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block titulo_conteudo %} Listagem de Produtos {% endblock titulo_conteudo %}
+{% block titulo_conteudo %} Listagem de Produtos {% endblock %}
 
-{% block conteudo %} 
-
-<div class="barrabotoes">
-    <button onClick="location='{% url "form_produto" %}'" type="button" class="btn btn-primary btn-sm">Inserir Novo</button>
-    <button onClick="location='{% url "produto" %}'" type="button" class="btn btn-primary btn-sm">Recarregar</button>
+{% block conteudo %}
+<div class="mb-3">
+    <a href="{% url 'form_produto' %}" class="btn btn-primary">Inserir Novo</a>
 </div>
 
-<table class="table table-hover">
+<table class="table table-striped">
     <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Preço</th>
-        <th>Categoria</th>
-        <th>Ações</th>
-      </tr>
+        <tr>
+            <th>Imagem</th> <th>Nome</th>
+            <th>Preço</th>
+            <th>Estoque</th> <th>Ações</th>
+        </tr>
     </thead>
     <tbody>
-    {% for produto in lista %}
-      <tr>
-        <td>{{ produto.id }}</td>
-        <td>{{ produto.nome }}</td>
-        <td>{{ produto.preco_formatado }}</td>
-        <td>{{ produto.categoria.nome }}</td>
-        <td>
-          <button onclick="location='{% url 'detalhes_produto' produto.id %}'" class="btn btn-info btn-sm">Detalhes</button>
-          
-          <a href="{% url 'editar_produto' produto.id %}" class="btn btn-warning btn-sm">Editar</a>
-          
-          <a href="{% url 'remover_produto' produto.id %}" class="btn btn-danger btn-sm" 
-          onclick="return confirm('Tem certeza que deseja remover este registro?');">Remover</a>
-        </td>
-      </tr>
-    {% empty %}
-      <tr>
-        <td colspan="5" class="text-center">Nenhum produto cadastrado.</td>
-      </tr>
-    {% endfor %}
+        {% for produto in lista %}
+        <tr>
+            <td>
+                {% if produto.img_base64 %}
+                    <img src="{{ produto.img_base64 }}" width="50" class="img-thumbnail">
+                {% else %}
+                    <span class="text-muted">Sem foto</span>
+                {% endif %}
+            </td>
+            <td>{{ produto.nome }}</td>
+            <td>{{ produto.preco_formatado }}</td>
+            <td>
+                {% with produto.estoque.first as est %}
+                    {{ est.quantidade|default:"0" }}
+                {% endwith %}
+            </td>
+            <td>
+                <a href="{% url 'detalhes_produto' produto.id %}" class="btn btn-info btn-sm">Detalhes</a>
+                <a href="{% url 'ajustar_estoque' produto.id %}" class="btn btn-dark btn-sm">Estoque</a>
+                <a href="{% url 'editar_produto' produto.id %}" class="btn btn-warning btn-sm">Editar</a>
+                <a href="{% url 'remover_produto' produto.id %}" class="btn btn-danger btn-sm">Remover</a>
+            </td>
+        </tr>
+        {% endfor %}
     </tbody>
 </table>
-
-{% endblock conteudo %}
+{% endblock %}

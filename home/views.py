@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Categoria, Cliente, Produto
 from .forms import CategoriaForm, ClienteForm, ProdutoForm
+from django.http import JsonResponse
+from django.apps import apps
+from .models import Categoria, Cliente, Produto, Estoque
+from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm
 
 # --- INDEX ---
 def index(request):
@@ -114,3 +118,30 @@ def remover_produto(request, id):
     item.delete()
     messages.success(request, 'Produto removido!')
     return redirect('produto')
+
+def buscar_dados(request, app_model):
+    termo = request.GET.get('q', '')
+    app_label, model_name = app_model.split('.')
+    model = apps.get_model(app_label, model_name)
+
+    # Procura registos que contenham o termo digitado
+    resultados = model.objects.filter(nome__icontains=termo)[:10]
+    dados = [{'id': obj.id, 'nome': obj.nome} for obj in resultados]
+    return JsonResponse(dados, safe=False)
+
+
+def ajustar_estoque(request, id):
+    produto = get_object_or_404(Produto, pk=id)
+    # Tenta pegar o estoque ou cria um novo se não existir
+    estoque, created = Estoque.objects.get_or_create(produto=produto)
+    
+    if request.method == 'POST':
+        form = EstoqueForm(request.POST, instance=estoque)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Estoque atualizado com sucesso!')
+            return redirect('produto')
+    else:
+        form = EstoqueForm(instance=estoque)
+        
+    return render(request, 'produto/estoque.html', {'form': form, 'produto': produto})

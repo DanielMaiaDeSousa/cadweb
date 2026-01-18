@@ -26,4 +26,7 @@ urlpatterns = [
     path('cliente/editar/<int:id>/', views.editar_cliente, name="editar_cliente"),
     path('cliente/remover/<int:id>/', views.remover_cliente, name='remover_cliente'),
     path('cliente/detalhes/<int:id>/', views.detalhes_cliente, name='detalhes_cliente'),
+    
+    path('buscar_dados/<str:app_model>/', views.buscar_dados, name='buscar_dados'),
+    path('produto/estoque/<int:id>/', views.ajustar_estoque, name='ajustar_estoque'),
 ]
