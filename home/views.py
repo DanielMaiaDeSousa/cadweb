@@ -100,9 +100,14 @@ def editar_produto(request, id):
             return redirect('produto')
     return render(request, 'produto/form.html', {'form': form})
 
-def detalhes_produto(request, id):
-    item = get_object_or_404(Produto, pk=id)
-    return render(request, 'produto/detalhes.html', {'item': item})
+# home/views.py
+
+def detalhes_produto(request, id): # Removido o 'self'
+    # Busca o produto pelo ID (pk). Se não achar, abre a página de erro 404.
+    produto = get_object_or_404(Produto, pk=id)
+    
+    # Renderiza o template de detalhes passando o produto como 'item'
+    return render(request, 'produto/detalhes.html', {'item': produto})
 
 def remover_produto(request, id):
     item = get_object_or_404(Produto, pk=id)
