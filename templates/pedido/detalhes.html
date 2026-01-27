@@ -28,7 +28,8 @@
                data-url="{% url 'buscar_dados' 'home.Produto' %}" 
                data-hidden="#id_produto"
                placeholder="Digite o nome do produto...">
-        {{ form.produto }} </div>
+        {{ form.produto }} 
+    </div>
 
     <div class="col-md-2">
         <label class="form-label">Quantidade:</label>
@@ -66,18 +67,28 @@
             <tr>
                 <td>{{ item.produto.nome }}</td>
                 <td>{{ item.qtde }}</td>
-                <td>{{ item.preco }}</td>
-                <td></td>
+                <td>R$ {{ item.preco }}</td>
+                <td>R$ {{ item.total_item }}</td> 
                 <td class="text-center">
                     <a href="{% url 'remover_item_pedido' item.id %}" 
                         class="btn btn-danger btn-sm"
-                        onclick="return confirm('Tem certeza que deseja remover este produto do pedido?')">
+                        onclick="return confirm('Remover item?')">
                         <i class="fas fa-trash"></i> Remover
                     </a>
                 </td>
             </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted">Nenhum item adicionado ainda.</td>
+            </tr>
             {% endfor %}
         </tbody>
+        <tfoot class="table-light">
+            <tr>
+                <td colspan="3" class="text-end"><strong>Total do Pedido:</strong></td>
+                <td colspan="2"><strong>R$ {{ pedido.valor_total_pedido }}</strong></td>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -91,12 +102,10 @@
 {% block javascript %}
 <script>
     $(document).ready(function() {
-        // Ativa o autocomplete no campo de produto [cite: 15]
         $('.autocomplete').each(function() {
             autoComplete(this);
         });
 
-        // Aplica a máscara de dinheiro no preço [cite: 16]
         $('.money').mask('#.##0,00', {reverse: true});
     });
 </script>

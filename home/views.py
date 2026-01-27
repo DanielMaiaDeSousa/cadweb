@@ -2,11 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.apps import apps
-
-# Importação de todos os modelos (Atividades 14 e 16)
 from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido
-
-# Importação de todos os formulários (Lembre-se de mover o ItemPedidoForm para o forms.py)
 from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm
 
 # --- INDEX ---
@@ -115,7 +111,7 @@ def remover_produto(request, id):
     messages.success(request, 'Produto removido!')
     return redirect('produto')
 
-# --- ESTOQUE (Atividade 14) ---
+# --- ESTOQUE ---
 def ajustar_estoque(request, id):
     produto = get_object_or_404(Produto, pk=id)
     estoque, created = Estoque.objects.get_or_create(produto=produto)
@@ -131,7 +127,7 @@ def ajustar_estoque(request, id):
         
     return render(request, 'produto/estoque.html', {'form': form, 'produto': produto})
 
-# --- BUSCA GENÉRICA / AUTOCOMPLETE (Atividade 15) ---
+# --- BUSCA / AUTOCOMPLETE ---
 def buscar_dados(request, app_model):
     termo = request.GET.get('q', '')
     app_label, model_name = app_model.split('.')
@@ -140,42 +136,45 @@ def buscar_dados(request, app_model):
     dados = [{'id': obj.id, 'nome': obj.nome} for obj in resultados]
     return JsonResponse(dados, safe=False)
 
-# --- PEDIDOS (Atividades 16 e 17) ---
-
+# --- PEDIDOS ---
 def pedido(request):
-    """Lista todos os pedidos (Slide 6 - Atividade 16)"""
     lista = Pedido.objects.all().order_by('-id')
     return render(request, 'pedido/lista.html', {'lista': lista})
 
 def novo_pedido(request, cliente_id):
-    """Cria um novo pedido para um cliente (Atividade 16)"""
     cliente = get_object_or_404(Cliente, pk=cliente_id)
-    pedido = Pedido.objects.create(cliente=cliente, status=1) 
-    return redirect('detalhes_pedido', id=pedido.id)
+    pedido_obj = Pedido.objects.create(cliente=cliente, status=1) 
+    return redirect('detalhes_pedido', id=pedido_obj.id)
 
 def detalhes_pedido(request, id):
-    """Exibe detalhes e gerencia inclusão de itens (Atividade 17)"""
-    pedido = get_object_or_404(Pedido, pk=id)
+    pedido_obj = get_object_or_404(Pedido, pk=id)
     if request.method == 'POST':
         form = ItemPedidoForm(request.POST)
         if form.is_valid():
             item = form.save(commit=False)
-            item.pedido = pedido
-            item.save()
-            messages.success(request, "Produto adicionado!")
-            return redirect('detalhes_pedido', id=id)
+            estoque = Estoque.objects.filter(produto=item.produto).first()
+            
+            if estoque and estoque.quantidade >= item.qtde:
+                estoque.quantidade -= item.qtde
+                estoque.save()
+                item.pedido = pedido_obj
+                item.save()
+                messages.success(request, "Produto adicionado!")
+                return redirect('detalhes_pedido', id=id)
+            else:
+                messages.error(request, "Estoque insuficiente!")
     else:
         form = ItemPedidoForm()
         
-    return render(request, 'pedido/detalhes.html', {
-        'pedido': pedido, 
-        'form': form
-    })
+    return render(request, 'pedido/detalhes.html', {'pedido': pedido_obj, 'form': form})
 
 def remover_item_pedido(request, id):
-    """Remove um item específico de um pedido"""
     item = get_object_or_404(ItemPedido, pk=id)
     pedido_id = item.pedido.id
+    estoque = Estoque.objects.filter(produto=item.produto).first()
+    if estoque:
+        estoque.quantidade += item.qtde
+        estoque.save()
     item.delete()
-    messages.success(request, "Produto removido!")
+    messages.success(request, "Produto removido e estoque devolvido!")
     return redirect('detalhes_pedido', id=pedido_id)

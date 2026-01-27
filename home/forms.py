@@ -82,3 +82,8 @@ class ItemPedidoForm(forms.ModelForm):
             'qtde': forms.NumberInput(attrs={'class': 'form-control'}),
             'preco': forms.TextInput(attrs={'class': 'money form-control'}),
         }
+    def __init__(self, *args, **kwargs):
+        super(ItemPedidoForm, self).__init__(*args, **kwargs)
+        # Ativa localização para tratar vírgulas e pontos nativamente
+        self.fields['preco'].localize = True
+        self.fields['preco'].widget.is_localized = True 
