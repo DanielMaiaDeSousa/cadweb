@@ -178,3 +178,14 @@ def remover_item_pedido(request, id):
     item.delete()
     messages.success(request, "Produto removido e estoque devolvido!")
     return redirect('detalhes_pedido', id=pedido_id)
+
+def remover_pedido(request, id):
+    pedido_obj = get_object_or_404(Pedido, pk=id)
+    for item in pedido_obj.itens.all():
+        estoque = Estoque.objects.filter(produto=item.produto).first()
+        if estoque:
+            estoque.quantidade += item.qtde
+            estoque.save()
+    pedido_obj.delete()
+    messages.success(request, "Pedido removido e estoques atualizados!")
+    return redirect('pedido')
