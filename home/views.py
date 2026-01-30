@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.apps import apps
 from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido
-from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm
+from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm, PagamentoForm
 
 # --- INDEX ---
 def index(request):
@@ -239,19 +239,23 @@ def realizar_pagamento(request, id):
 
 # home/views.py
 
+# home/views.py
+
 def registrar_pagamento(request, pedido_id):
     pedido = get_object_or_404(Pedido, pk=pedido_id)
     
     if request.method == 'POST':
-        valor = request.POST.get('valor')
-        forma = request.POST.get('forma')
-        # Salva o novo pagamento
-        Pagamento.objects.create(pedido=pedido, valor=valor, forma=forma)
-        messages.success(request, "Pagamento registrado!")
-        return redirect('registrar_pagamento', pedido_id=pedido.id)
-
+        form = PagamentoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Pagamento registrado com sucesso!")
+            return redirect('registrar_pagamento', pedido_id=pedido.id)
+    else:
+        # Preenche o formulário com o pedido atual e a data de hoje
+        form = PagamentoForm(initial={'pedido': pedido})
+        
     contexto = {
         'pedido': pedido,
-        'pagamentos': pedido.pagamentos.all(), # Lista para a tabela
+        'form': form,
     }
     return render(request, 'pedido/pagamento.html', contexto)

@@ -1,6 +1,9 @@
 from django import forms
-from .models import Categoria, Cliente, Produto, Estoque, ItemPedido
+from .models import Categoria, Cliente, Produto, Estoque, ItemPedido, Pagamento
 from django.utils import timezone
+# home/views.py
+from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento # Adicione Pagamento aqui
+from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm, PagamentoForm # Adicione PagamentoForm aqui
 
 # --- CATEGORIA ---
 class CategoriaForm(forms.ModelForm):
@@ -86,4 +89,16 @@ class ItemPedidoForm(forms.ModelForm):
         super(ItemPedidoForm, self).__init__(*args, **kwargs)
         # Ativa localização para tratar vírgulas e pontos nativamente
         self.fields['preco'].localize = True
-        self.fields['preco'].widget.is_localized = True 
+        self.fields['preco'].widget.is_localized = True
+        
+# home/forms.py
+
+class PagamentoForm(forms.ModelForm):
+    class Meta:
+        model = Pagamento
+        fields = ['pedido', 'valor', 'forma']
+        widgets = {
+            'pedido': forms.Select(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'valor': forms.TextInput(attrs={'class': 'money form-control'}),
+            'forma': forms.Select(attrs={'class': 'form-control'}),
+        }

@@ -65,24 +65,25 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" class="text-center text-muted py-3">Nenhum pagamento registado.</td>
+                    <td colspan="3" class="text-center text-muted py-3">Nenhum pagamento registrado.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    
     <div class="card-footer bg-light">
         <div class="row text-center">
             <div class="col-md-4">
-                <small class="text-muted d-block">TOTAL DO PEDIDO</small>
+                <small class="text-muted d-block uppercase">Total do Pedido</small>
                 <h4 class="fw-bold">R$ {{ pedido.valor_total_pedido }}</h4>
             </div>
             <div class="col-md-4">
-                <small class="text-muted d-block text-success">TOTAL PAGO</small>
+                <small class="text-muted d-block uppercase text-success">Total Pago</small>
                 <h4 class="fw-bold text-success">R$ {{ pedido.total_pago }}</h4>
             </div>
             <div class="col-md-4 border-start">
-                <small class="text-muted d-block text-danger">DÉBITO (RESTANTE)</small>
+                <small class="text-muted d-block uppercase text-danger">Débito (Restante)</small>
                 <h4 class="fw-bold text-danger">R$ {{ pedido.debito_restante }}</h4>
             </div>
         </div>
