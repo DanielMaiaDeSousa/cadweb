@@ -66,3 +66,42 @@ function autoComplete(inputSelector) {
             };
 
         }
+
+// static/js/funcoes.js
+
+function autoComplete(inputSelector) {
+    var inputElement = $(inputSelector);
+    var buscaUrl = inputElement.data('url');
+    var hiddenSelector = inputElement.data('hidden');
+
+    $(inputSelector).autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: buscaUrl,
+                dataType: "json",
+                data: { q: request.term },
+                success: function(data) {
+                    response($.map(data, function(item) {
+                        return {
+                            label: item.nome,
+                            value: item.nome,
+                            id: item.id,
+                            preco: item.preco // Capturamos o preço do JSON
+                        };
+                    }));
+                }
+            });
+        },
+        select: function(event, ui) {
+            $(hiddenSelector).val(ui.item.id);
+            
+            // Se existir um campo de preço no formulário de pedido, preenchemos automaticamente
+            if (ui.item.preco) {
+                // O ID padrão do Django para o campo preco no ItemPedidoForm é #id_preco
+                $('#id_preco').val(ui.item.preco.replace('.', ','));
+                // Disparamos o evento de mudança para que máscaras de dinheiro processem o valor
+                $('#id_preco').trigger('input');
+            }
+        }
+    });
+}        

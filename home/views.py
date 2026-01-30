@@ -193,3 +193,26 @@ def remover_pedido(request, id):
     pedido_obj.delete()
     messages.success(request, "Pedido removido e estoques atualizados!")
     return redirect('pedido')
+
+# home/views.py
+
+def buscar_dados(request, app_model):
+    termo = request.GET.get('q', '')
+    app_label, model_name = app_model.split('.')
+    model = apps.get_model(app_label, model_name)
+    
+    # Filtramos os resultados e selecionamos o campo preço também
+    resultados = model.objects.filter(nome__icontains=termo)[:10]
+    
+    dados = []
+    for obj in resultados:
+        item = {
+            'id': obj.id, 
+            'nome': obj.nome,
+        }
+        # Se o modelo tiver o atributo preco, adicionamos aos dados
+        if hasattr(obj, 'preco'):
+            item['preco'] = str(obj.preco) # Convertemos Decimal para string
+        dados.append(item)
+        
+    return JsonResponse(dados, safe=False)
