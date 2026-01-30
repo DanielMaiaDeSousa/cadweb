@@ -11,12 +11,20 @@
         <p><strong>Data:</strong> {{ pedido.data_pedidof }}</p>
     </div>
     <div class="col-md-4">
-        <p><strong>Status:</strong> <span class="badge bg-info">{{ pedido.get_status_display }}</span></p>
+        <p><strong>Status:</strong> 
+            {% if pedido.status == 3 %}
+                <span class="badge bg-success">Pago</span>
+            {% else %}
+                <span class="badge bg-info">{{ pedido.get_status_display }}</span>
+            {% endif %}
+        </p>
     </div>
 </div>
 
 <hr>
 
+{# Só exibe o formulário de adição se o pedido não estiver concluído/pago #}
+{% if pedido.status < 3 %}
 <h5 class="mb-3">Adicionar Produto ao Pedido</h5>
 <form method="post" class="row g-3 align-items-end">
     {% csrf_token %}
@@ -47,8 +55,8 @@
         </button>
     </div>
 </form>
-
 <hr class="my-4">
+{% endif %}
 
 <h5 class="mb-3">Itens do Pedido</h5>
 <div class="table-responsive">
@@ -70,11 +78,15 @@
                 <td>R$ {{ item.preco }}</td>
                 <td>R$ {{ item.total_item }}</td> 
                 <td class="text-center">
+                    {% if pedido.status < 3 %}
                     <a href="{% url 'remover_item_pedido' item.id %}" 
                         class="btn btn-danger btn-sm"
                         onclick="return confirm('Remover item?')">
                         <i class="fas fa-trash"></i> Remover
                     </a>
+                    {% else %}
+                    <span class="text-muted"><i class="fas fa-lock"></i></span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
@@ -92,10 +104,23 @@
     </table>
 </div>
 
-<div class="mt-4">
+<div class="mt-4 d-flex justify-content-between">
     <a href="{% url 'pedido' %}" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Voltar para Lista
     </a>
+
+    {# Botão de Pagamento #}
+    {% if pedido.status < 3 and pedido.itempedido_set.exists %}
+        <a href="{% url 'realizar_pagamento' pedido.id %}" 
+           class="btn btn-primary btn-lg"
+           onclick="return confirm('Confirmar o pagamento total de R$ {{ pedido.valor_total_pedido }}?')">
+            <i class="fas fa-credit-card"></i> Efetuar Pagamento
+        </a>
+    {% elif pedido.status == 3 %}
+        <button class="btn btn-success btn-lg" disabled>
+            <i class="fas fa-check-circle"></i> Pedido Pago
+        </button>
+    {% endif %}
 </div>
 {% endblock %}
 
