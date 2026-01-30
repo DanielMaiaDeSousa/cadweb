@@ -45,8 +45,7 @@ class Estoque(models.Model):
     def __str__(self):
         return f"{self.produto.nome} - {self.quantidade}"
 
-# --- PEDIDOS ---
-
+# --- PEDIDO (Deve vir antes de ItemPedido e Pagamento) ---
 class Pedido(models.Model):
     STATUS_CHOICES = [
         (1, 'Novo'),
@@ -55,18 +54,10 @@ class Pedido(models.Model):
         (4, 'Cancelado'),
     ]
 
-    FORMA_PAGAMENTO_CHOICES = [
-        ('dinheiro', 'Dinheiro'),
-        ('cartao_credito', 'Cartão de Crédito'),
-        ('cartao_debito', 'Cartão de Débito'),
-        ('pix', 'Pix'),
-    ]
-
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     produtos = models.ManyToManyField(Produto, through='ItemPedido')
     data_pedido = models.DateTimeField(auto_now_add=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=1)
-    forma_pagamento = models.CharField(max_length=20, choices=FORMA_PAGAMENTO_CHOICES, blank=True, null=True)
 
     @property
     def data_pedidof(self):
@@ -76,7 +67,18 @@ class Pedido(models.Model):
     
     @property
     def valor_total_pedido(self):
+        """Soma o total de todos os itens do pedido"""
         return sum(item.total_item for item in self.itempedido_set.all())
+
+    @property
+    def total_pago(self):
+        """Soma todos os lançamentos de pagamento vinculados"""
+        return sum(p.valor for p in self.pagamentos.all())
+
+    @property
+    def debito_restante(self):
+        """Calcula a diferença entre o total e o que já foi pago"""
+        return self.valor_total_pedido - self.total_pago
 
 class ItemPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
@@ -86,9 +88,21 @@ class ItemPedido(models.Model):
 
     @property
     def total_item(self):
+        """Calcula o subtotal da linha"""
         if self.qtde and self.preco:
             return self.qtde * self.preco
         return 0
 
     def __str__(self):
         return f"{self.produto.nome} (Qtd: {self.qtde})"
+
+class Pagamento(models.Model):
+    FORMA_CHOICES = [
+        ('dinheiro', 'Dinheiro'),
+        ('cartao', 'Cartão'),
+        ('pix', 'Pix'),
+    ]
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='pagamentos')
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    forma = models.CharField(max_length=20, choices=FORMA_CHOICES)
+    data_pagamento = models.DateTimeField(auto_now_add=True)

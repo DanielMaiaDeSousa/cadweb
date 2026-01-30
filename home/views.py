@@ -236,3 +236,22 @@ def realizar_pagamento(request, id):
             messages.error(request, "Adicione itens antes de pagar.")
             
     return redirect('detalhes_pedido', id=id)
+
+# home/views.py
+
+def registrar_pagamento(request, pedido_id):
+    pedido = get_object_or_404(Pedido, pk=pedido_id)
+    
+    if request.method == 'POST':
+        valor = request.POST.get('valor')
+        forma = request.POST.get('forma')
+        # Salva o novo pagamento
+        Pagamento.objects.create(pedido=pedido, valor=valor, forma=forma)
+        messages.success(request, "Pagamento registrado!")
+        return redirect('registrar_pagamento', pedido_id=pedido.id)
+
+    contexto = {
+        'pedido': pedido,
+        'pagamentos': pedido.pagamentos.all(), # Lista para a tabela
+    }
+    return render(request, 'pedido/pagamento.html', contexto)
