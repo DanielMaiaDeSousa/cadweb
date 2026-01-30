@@ -179,13 +179,17 @@ def remover_item_pedido(request, id):
     messages.success(request, "Produto removido e estoque devolvido!")
     return redirect('detalhes_pedido', id=pedido_id)
 
+# home/views.py
+
 def remover_pedido(request, id):
     pedido_obj = get_object_or_404(Pedido, pk=id)
-    for item in pedido_obj.itens.all():
+    # Loop para devolver os itens ao estoque antes de excluir o pedido
+    for item in pedido_obj.itempedido_set.all(): # Corrigido para o related_name padrão do Django
         estoque = Estoque.objects.filter(produto=item.produto).first()
         if estoque:
             estoque.quantidade += item.qtde
             estoque.save()
+    
     pedido_obj.delete()
     messages.success(request, "Pedido removido e estoques atualizados!")
     return redirect('pedido')

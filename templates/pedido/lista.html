@@ -26,7 +26,7 @@
             <td>{{ pedido.cliente.nome }}</td>
             <td>{{ pedido.data_pedidof }}</td> <td>{{ pedido.get_status_display }}</td> <td>
                 <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn btn-primary btn-sm">Detalhes</a>
-                <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Excluir pedido?')">Remover</a>
+                <a href="{% url 'remover_pedido' pedido.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Excluir pedido?')">Remover</a>
             </td>
         </tr>
         {% empty %}
