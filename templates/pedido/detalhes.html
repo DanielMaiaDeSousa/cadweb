@@ -104,23 +104,43 @@
     </table>
 </div>
 
-<div class="mt-4 d-flex justify-content-between">
-    <a href="{% url 'pedido' %}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Voltar para Lista
-    </a>
+{# SEÇÃO DE PAGAMENTO #}
+<div class="card bg-light mt-4">
+    <div class="card-body">
+        <form method="post" action="{% url 'realizar_pagamento' pedido.id %}">
+            {% csrf_token %}
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-3"><i class="fas fa-wallet"></i> Forma de Pagamento</h5>
+                    <select name="forma_pagamento" class="form-select" required {% if pedido.status == 3 %}disabled{% endif %}>
+                        <option value="">Selecione a forma de pagamento...</option>
+                        <option value="dinheiro" {% if pedido.forma_pagamento == 'dinheiro' %}selected{% endif %}>Dinheiro</option>
+                        <option value="cartao_credito" {% if pedido.forma_pagamento == 'cartao_credito' %}selected{% endif %}>Cartão de Crédito</option>
+                        <option value="cartao_debito" {% if pedido.forma_pagamento == 'cartao_debito' %}selected{% endif %}>Cartão de Débito</option>
+                        <option value="pix" {% if pedido.forma_pagamento == 'pix' %}selected{% endif %}>PIX</option>
+                    </select>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="mt-4 mt-md-0">
+                        <a href="{% url 'pedido' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
 
-    {# Botão de Pagamento #}
-    {% if pedido.status < 3 and pedido.itempedido_set.exists %}
-        <a href="{% url 'realizar_pagamento' pedido.id %}" 
-           class="btn btn-primary btn-lg"
-           onclick="return confirm('Confirmar o pagamento total de R$ {{ pedido.valor_total_pedido }}?')">
-            <i class="fas fa-credit-card"></i> Efetuar Pagamento
-        </a>
-    {% elif pedido.status == 3 %}
-        <button class="btn btn-success btn-lg" disabled>
-            <i class="fas fa-check-circle"></i> Pedido Pago
-        </button>
-    {% endif %}
+                        {% if pedido.status < 3 and pedido.itempedido_set.exists %}
+                            <button type="submit" class="btn btn-primary btn-lg"
+                               onclick="return confirm('Confirmar o pagamento total de R$ {{ pedido.valor_total_pedido }}?')">
+                                <i class="fas fa-credit-card"></i> Efetuar Pagamento
+                            </button>
+                        {% elif pedido.status == 3 %}
+                            <button class="btn btn-success btn-lg" disabled>
+                                <i class="fas fa-check-circle"></i> Pedido Pago
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 

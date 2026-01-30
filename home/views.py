@@ -219,15 +219,20 @@ def buscar_dados(request, app_model):
 
 # home/views.py
 
+# home/views.py
+
 def realizar_pagamento(request, id):
     pedido_obj = get_object_or_404(Pedido, pk=id)
     
-    if pedido_obj.itempedido_set.exists():
-        # Alteramos o status para Concluído
-        pedido_obj.status = 3 
-        pedido_obj.save()
-        messages.success(request, f"Pagamento do pedido #{id} realizado com sucesso!")
-    else:
-        messages.error(request, "Não é possível pagar um pedido sem itens.")
+    if request.method == 'POST':
+        forma = request.POST.get('forma_pagamento')
         
+        if pedido_obj.itempedido_set.exists():
+            pedido_obj.forma_pagamento = forma # Salva a forma escolhida
+            pedido_obj.status = 3  # Concluído
+            pedido_obj.save()
+            messages.success(request, f"Pagamento via {pedido_obj.get_forma_pagamento_display()} confirmado!")
+        else:
+            messages.error(request, "Adicione itens antes de pagar.")
+            
     return redirect('detalhes_pedido', id=id)
