@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.apps import apps
-from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido
+
+# Importação de modelos e formulários corrigida
+from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento
 from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm, PagamentoForm
 
 # --- INDEX ---
@@ -127,7 +129,7 @@ def ajustar_estoque(request, id):
         
     return render(request, 'produto/estoque.html', {'form': form, 'produto': produto})
 
-# --- BUSCA / AUTOCOMPLETE ---
+# --- BUSCA GENÉRICA / AUTOCOMPLETE ---
 def buscar_dados(request, app_model):
     termo = request.GET.get('q', '')
     app_label, model_name = app_model.split('.')
@@ -152,110 +154,59 @@ def detalhes_pedido(request, id):
         form = ItemPedidoForm(request.POST)
         if form.is_valid():
             item = form.save(commit=False)
-            estoque = Estoque.objects.filter(produto=item.produto).first()
-            
-            if estoque and estoque.quantidade >= item.qtde:
-                estoque.quantidade -= item.qtde
-                estoque.save()
-                item.pedido = pedido_obj
-                item.save()
-                messages.success(request, "Produto adicionado!")
-                return redirect('detalhes_pedido', id=id)
-            else:
-                messages.error(request, "Estoque insuficiente!")
+            item.pedido = pedido_obj
+            item.save()
+            messages.success(request, "Produto adicionado!")
+            return redirect('detalhes_pedido', id=id)
     else:
         form = ItemPedidoForm()
         
-    return render(request, 'pedido/detalhes.html', {'pedido': pedido_obj, 'form': form})
+    itens = ItemPedido.objects.filter(pedido=pedido_obj)
+    return render(request, 'pedido/detalhes.html', {
+        'pedido': pedido_obj, 
+        'form': form,
+        'itens': itens
+    })
 
 def remover_item_pedido(request, id):
     item = get_object_or_404(ItemPedido, pk=id)
     pedido_id = item.pedido.id
-    estoque = Estoque.objects.filter(produto=item.produto).first()
-    if estoque:
-        estoque.quantidade += item.qtde
-        estoque.save()
     item.delete()
-    messages.success(request, "Produto removido e estoque devolvido!")
+    messages.success(request, "Produto removido!")
     return redirect('detalhes_pedido', id=pedido_id)
-
-# home/views.py
 
 def remover_pedido(request, id):
     pedido_obj = get_object_or_404(Pedido, pk=id)
-    # Loop para devolver os itens ao estoque antes de excluir o pedido
-    for item in pedido_obj.itempedido_set.all(): # Corrigido para o related_name padrão do Django
-        estoque = Estoque.objects.filter(produto=item.produto).first()
-        if estoque:
-            estoque.quantidade += item.qtde
-            estoque.save()
-    
     pedido_obj.delete()
-    messages.success(request, "Pedido removido e estoques atualizados!")
+    messages.success(request, "Pedido removido!")
     return redirect('pedido')
 
-# home/views.py
-
-def buscar_dados(request, app_model):
-    termo = request.GET.get('q', '')
-    app_label, model_name = app_model.split('.')
-    model = apps.get_model(app_label, model_name)
-    
-    # Filtramos os resultados e selecionamos o campo preço também
-    resultados = model.objects.filter(nome__icontains=termo)[:10]
-    
-    dados = []
-    for obj in resultados:
-        item = {
-            'id': obj.id, 
-            'nome': obj.nome,
-        }
-        # Se o modelo tiver o atributo preco, adicionamos aos dados
-        if hasattr(obj, 'preco'):
-            item['preco'] = str(obj.preco) # Convertemos Decimal para string
-        dados.append(item)
-        
-    return JsonResponse(dados, safe=False)
-
-# home/views.py
-
-# home/views.py
-
-def realizar_pagamento(request, id):
-    pedido_obj = get_object_or_404(Pedido, pk=id)
-    
-    if request.method == 'POST':
-        forma = request.POST.get('forma_pagamento')
-        
-        if pedido_obj.itempedido_set.exists():
-            pedido_obj.forma_pagamento = forma # Salva a forma escolhida
-            pedido_obj.status = 3  # Concluído
-            pedido_obj.save()
-            messages.success(request, f"Pagamento via {pedido_obj.get_forma_pagamento_display()} confirmado!")
-        else:
-            messages.error(request, "Adicione itens antes de pagar.")
-            
-    return redirect('detalhes_pedido', id=id)
-
-# home/views.py
-
-# home/views.py
-
+# --- PAGAMENTOS ---
 def registrar_pagamento(request, pedido_id):
-    pedido = get_object_or_404(Pedido, pk=pedido_id)
+    """View para gerenciar múltiplos pagamentos (Total, Pago, Débito)"""
+    pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
     
     if request.method == 'POST':
-        form = PagamentoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Pagamento registrado com sucesso!")
-            return redirect('registrar_pagamento', pedido_id=pedido.id)
-    else:
-        # Preenche o formulário com o pedido atual e a data de hoje
-        form = PagamentoForm(initial={'pedido': pedido})
+        valor = request.POST.get('valor')
+        forma = request.POST.get('forma')
         
-    contexto = {
-        'pedido': pedido,
-        'form': form,
-    }
-    return render(request, 'pedido/pagamento.html', contexto)
+        if valor and forma:
+            try:
+                # Trata o valor para o formato decimal do Python
+                valor_decimal = float(valor.replace(',', '.'))
+                
+                # Registra o pagamento vinculado ao pedido
+                Pagamento.objects.create(
+                    pedido=pedido_obj,
+                    valor=valor_decimal,
+                    forma=forma
+                )
+                messages.success(request, "Pagamento registado com sucesso!")
+            except ValueError:
+                messages.error(request, "Valor de pagamento inválido.")
+        else:
+            messages.error(request, "Preencha todos os campos corretamente.")
+            
+        return redirect('registrar_pagamento', pedido_id=pedido_id)
+
+    return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj})

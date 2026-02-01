@@ -35,6 +35,6 @@ urlpatterns = [
     path('detalhes_pedido/<int:id>/', views.detalhes_pedido, name='detalhes_pedido'),
     path('pedido/remover-item/<int:id>/', views.remover_item_pedido, name='remover_item_pedido'),
     path('pedido/remover/<int:id>/', views.remover_pedido, name='remover_pedido'),
-    path('pedido/pagamento/<int:id>/', views.realizar_pagamento, name='realizar_pagamento'),
+    path('pedido/pagamento/<int:pedido_id>/', views.registrar_pagamento, name='registrar_pagamento'),
     
 ]

@@ -1,9 +1,7 @@
 from django import forms
 from .models import Categoria, Cliente, Produto, Estoque, ItemPedido, Pagamento
 from django.utils import timezone
-# home/views.py
-from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento # Adicione Pagamento aqui
-from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm, PagamentoForm # Adicione PagamentoForm aqui
+
 
 # --- CATEGORIA ---
 class CategoriaForm(forms.ModelForm):

@@ -107,7 +107,7 @@
 {# SEÇÃO DE PAGAMENTO #}
 <div class="card bg-light mt-4">
     <div class="card-body">
-        <form method="post" action="{% url 'realizar_pagamento' pedido.id %}">
+        <form method="post" action="{% url 'registrar_pagamento' pedido.id %}">
             {% csrf_token %}
             <div class="row align-items-center">
                 <div class="col-md-6">
