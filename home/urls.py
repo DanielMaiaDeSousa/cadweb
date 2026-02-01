@@ -1,10 +1,14 @@
 from django.urls import path
 from . import views
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path
+from django.urls import path, include
+from django.contrib import admin
 
 urlpatterns = [
     path('', views.index, name="index"),
+    path('admin/', admin.site.urls),
+    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     
     # --- CATEGORIAS ---
     path('categoria/', views.categoria, name="categoria"),
@@ -38,10 +42,4 @@ urlpatterns = [
     path('pedido/remover-item/<int:id>/', views.remover_item_pedido, name='remover_item_pedido'),
     path('pedido/remover/<int:id>/', views.remover_pedido, name='remover_pedido'),
     path('pedido/pagamento/<int:pedido_id>/', views.registrar_pagamento, name='registrar_pagamento'),
-    
-    #--- AUTENTICAÇÃO ---
-    
-    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
-    
 ]
