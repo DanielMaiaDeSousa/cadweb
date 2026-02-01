@@ -20,28 +20,43 @@
         <form method="post">
             {% csrf_token %}
             <div class="row g-3 align-items-end">
-                <div class="col-md-5">
-                    <label class="form-label">Forma de Pagamento:</label>
+                <div class="col-md-2">
+                    <label class="form-label">Forma:</label>
                     <select name="forma" class="form-select" required>
-                        <option value="">Selecione...</option>
                         <option value="dinheiro">Dinheiro</option>
                         <option value="cartao">Cartão</option>
                         <option value="pix">Pix</option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Valor a Pagar (Máximo R$ {{ pedido.debito_restante }}):</label>
-                    <input type="number" 
-                           step="0.01" 
-                           name="valor" 
-                           class="form-control" 
-                           placeholder="0,00" 
-                           max="{{ pedido.debito_restante|stringformat:'.2f' }}" 
-                           required>
+                
+                <div class="col-md-2">
+                    <label class="form-label">Tipo:</label>
+                    <select name="tipo" id="id_tipo_pagamento" class="form-select" required>
+                        <option value="a_vista">À Vista</option>
+                        <option value="parcelado">Parcelado</option>
+                    </select>
                 </div>
-                <div class="col-md-3">
+
+                <div class="col-md-2" id="div_parcelas" style="display: none;">
+                    <label class="form-label">Nº Parcelas:</label>
+                    <input type="number" name="parcelas" id="id_parcelas" class="form-control" value="1" min="1">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Valor Total (R$):</label>
+                    <input type="number" step="0.01" name="valor" id="id_valor_pagamento" 
+                           class="form-control" placeholder="0,00" 
+                           max="{{ pedido.debito_restante|stringformat:'.2f' }}" required>
+                </div>
+
+                <div class="col-md-2" id="div_valor_parcela" style="display: none;">
+                    <label class="form-label">Valor da Parcela:</label>
+                    <input type="text" id="id_valor_parcela_view" class="form-control bg-light fw-bold text-primary" readonly placeholder="R$ 0,00">
+                </div>
+                
+                <div class="col-md-2">
                     <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-check"></i> Confirmar Pagamento
+                        <i class="fas fa-check"></i> Confirmar
                     </button>
                 </div>
             </div>
@@ -59,7 +74,8 @@
                 <tr>
                     <th>Data/Hora</th>
                     <th>Forma</th>
-                    <th class="text-end">Valor</th>
+                    <th>Tipo / Detalhe</th>
+                    <th class="text-end">Valor Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -67,11 +83,20 @@
                 <tr>
                     <td>{{ p.data_pagamento|date:"d/m/Y H:i" }}</td>
                     <td>{{ p.get_forma_display }}</td>
-                    <td class="text-end text-success">R$ {{ p.valor }}</td>
+                    <td>
+                        {{ p.get_tipo_display }}
+                        {% if p.tipo == 'parcelado' %}
+                            <br>
+                            <small class="text-muted">
+                                {{ p.parcelas }}x de R$ {{ p.valor_parcela|floatformat:2 }}
+                            </small>
+                        {% endif %}
+                    </td>
+                    <td class="text-end text-success fw-bold">R$ {{ p.valor }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3" class="text-center text-muted py-3">Nenhum pagamento registrado.</td>
+                    <td colspan="4" class="text-center text-muted py-3">Nenhum pagamento registrado.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -101,4 +126,47 @@
         <i class="fas fa-arrow-left"></i> Voltar para o Pedido
     </a>
 </div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectTipo = document.getElementById('id_tipo_pagamento');
+        const divParcelas = document.getElementById('div_parcelas');
+        const divValorParcela = document.getElementById('div_valor_parcela');
+        const campoParcelas = document.getElementById('id_parcelas');
+        const campoValorTotal = document.getElementById('id_valor_pagamento');
+        const campoValorParcelaView = document.getElementById('id_valor_parcela_view');
+
+        function calcularEAtualizar() {
+            const isParcelado = selectTipo.value === 'parcelado';
+            
+            // Mostra ou esconde os campos extras de parcelamento
+            divParcelas.style.display = isParcelado ? 'block' : 'none';
+            divValorParcela.style.display = isParcelado ? 'block' : 'none';
+
+            const valorTotal = parseFloat(campoValorTotal.value) || 0;
+            const numParcelas = parseInt(campoParcelas.value) || 1;
+
+            if (isParcelado && valorTotal > 0 && numParcelas > 0) {
+                const valorParcela = valorTotal / numParcelas;
+                // Formata o valor para o padrão brasileiro (R$)
+                campoValorParcelaView.value = valorParcela.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+            } else {
+                campoValorParcelaView.value = "";
+            }
+        }
+
+        // Monitora as mudanças em tempo real (input) nos campos
+        selectTipo.addEventListener('change', calcularEAtualizar);
+        campoParcelas.addEventListener('input', calcularEAtualizar);
+        campoValorTotal.addEventListener('input', calcularEAtualizar);
+        
+        // Inicializa o estado dos campos ao carregar a página
+        calcularEAtualizar();
+    });
+</script>
 {% endblock %}

@@ -212,13 +212,15 @@ def registrar_pagamento(request, pedido_id):
     if request.method == 'POST':
         valor = request.POST.get('valor')
         forma = request.POST.get('forma')
+        tipo = request.POST.get('tipo')  # Novo: Captura se é à vista ou parcelado
+        parcelas = request.POST.get('parcelas', 1)  # Novo: Captura o número de parcelas (padrão 1)
         
-        if valor and forma:
+        if valor and forma and tipo:
             try:
                 # Converte o valor para decimal tratando a vírgula para o formato Python
                 valor_decimal = float(valor.replace(',', '.'))
                 
-                # INCREMENTO 1: Validação rigorosa para impedir saldo negativo
+                # VALIDAÇÃO: Impede que o pagamento deixe o saldo negativo
                 if valor_decimal > pedido_obj.debito_restante:
                     messages.error(
                         request, 
@@ -227,15 +229,17 @@ def registrar_pagamento(request, pedido_id):
                 elif valor_decimal <= 0:
                     messages.error(request, "Erro: O valor do pagamento deve ser maior que zero.")
                 else:
-                    # Cria o registro de pagamento no banco de dados
+                    # Cria o registro de pagamento incluindo os novos campos de tipo e parcelas
                     Pagamento.objects.create(
                         pedido=pedido_obj,
                         valor=valor_decimal,
-                        forma=forma
+                        forma=forma,
+                        tipo=tipo,
+                        parcelas=int(parcelas) if tipo == 'parcelado' else 1
                     )
                     
-                    # INCREMENTO 2: Atualização automática de status
-                    # Se após o pagamento o débito for zerado, o pedido é concluído automaticamente
+                    # Atualização automática de status: Se quitado, o pedido é concluído automaticamente
+                    # Note: O cálculo do debito_restante deve ser feito após a criação do pagamento
                     if pedido_obj.debito_restante <= 0:
                         pedido_obj.status = 3  # Status 3 corresponde a 'Concluído'
                         pedido_obj.save()
@@ -244,7 +248,7 @@ def registrar_pagamento(request, pedido_id):
                         messages.success(request, "Pagamento parcial registrado com sucesso!")
                         
             except ValueError:
-                messages.error(request, "Erro: O valor digitado é inválido.")
+                messages.error(request, "Erro: O valor ou número de parcelas digitado é inválido.")
         
         # Redireciona para a mesma página para atualizar o histórico e os totais
         return redirect('registrar_pagamento', pedido_id=pedido_id)
