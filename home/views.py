@@ -130,12 +130,27 @@ def ajustar_estoque(request, id):
     return render(request, 'produto/estoque.html', {'form': form, 'produto': produto})
 
 # --- BUSCA GENÉRICA / AUTOCOMPLETE ---
+# home/views.py
+
 def buscar_dados(request, app_model):
     termo = request.GET.get('q', '')
     app_label, model_name = app_model.split('.')
     model = apps.get_model(app_label, model_name)
+    
+    # Filtramos os resultados (ex: Produtos ou Categorias)
     resultados = model.objects.filter(nome__icontains=termo)[:10]
-    dados = [{'id': obj.id, 'nome': obj.nome} for obj in resultados]
+    
+    dados = []
+    for obj in resultados:
+        item = {
+            'id': obj.id, 
+            'nome': obj.nome,
+        }
+        # Se o modelo (como o Produto) tiver o atributo preco, adicionamos aos dados
+        if hasattr(obj, 'preco') and obj.preco:
+            item['preco'] = str(obj.preco) # Convertemos para string para o JSON
+        dados.append(item)
+        
     return JsonResponse(dados, safe=False)
 
 # --- PEDIDOS ---
