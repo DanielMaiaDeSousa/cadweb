@@ -101,13 +101,19 @@ function configurarCalculoParcelas() {
     const campoValorTotal = document.getElementById('id_valor_pagamento');
     const campoValorParcelaView = document.getElementById('id_valor_parcela_view');
 
-    // Verifica se os elementos existem na página atual para evitar erros
-    if (!selectTipo || !campoValorTotal) return;
+    if (!campoValorTotal) return;
+
+    // 1. Preenchimento Automático ao carregar
+    const valorDebito = campoValorTotal.getAttribute('data-debito');
+    // Se o campo estiver vazio ou for zero, ele assume o valor do débito restante
+    if (valorDebito && (campoValorTotal.value === "" || parseFloat(campoValorTotal.value) === 0)) {
+        campoValorTotal.value = valorDebito;
+    }
 
     function atualizarCalculo() {
+        if (!selectTipo) return;
         const isParcelado = selectTipo.value === 'parcelado';
         
-        // Controla a visibilidade dos blocos de parcelamento
         if (divParcelas) divParcelas.style.display = isParcelado ? 'block' : 'none';
         if (divValorParcela) divValorParcela.style.display = isParcelado ? 'block' : 'none';
 
@@ -116,21 +122,22 @@ function configurarCalculoParcelas() {
 
         if (isParcelado && valorTotal > 0 && numParcelas > 0) {
             const valorParcela = valorTotal / numParcelas;
-            // Formata o valor calculado para moeda brasileira
-            campoValorParcelaView.value = valorParcela.toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            });
+            if (campoValorParcelaView) {
+                campoValorParcelaView.value = valorParcela.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+            }
         } else if (campoValorParcelaView) {
             campoValorParcelaView.value = "";
         }
     }
 
-    // Registra os ouvintes de evento para atualização instantânea
-    selectTipo.addEventListener('change', atualizarCalculo);
+    // Ouvintes de eventos
+    if (selectTipo) selectTipo.addEventListener('change', atualizarCalculo);
     campoParcelas.addEventListener('input', atualizarCalculo);
     campoValorTotal.addEventListener('input', atualizarCalculo);
     
-    // Executa uma vez no carregamento para ajustar o estado inicial
+    // Executa imediatamente para preencher e calcular o estado inicial
     atualizarCalculo();
 }

@@ -46,6 +46,7 @@
                     <label class="form-label">Valor Total (R$):</label>
                     <input type="number" step="0.01" name="valor" id="id_valor_pagamento" 
                            class="form-control" placeholder="0,00" 
+                           data-debito="{{ pedido.debito_restante|stringformat:'.2f' }}"
                            max="{{ pedido.debito_restante|stringformat:'.2f' }}" required>
                 </div>
 
@@ -138,10 +139,15 @@
         const campoValorTotal = document.getElementById('id_valor_pagamento');
         const campoValorParcelaView = document.getElementById('id_valor_parcela_view');
 
+        // 1. Lógica de Preenchimento Automático
+        const valorSugerido = campoValorTotal.getAttribute('data-debito');
+        if (valorSugerido && (!campoValorTotal.value || campoValorTotal.value == "0")) {
+            campoValorTotal.value = valorSugerido;
+        }
+
         function calcularEAtualizar() {
             const isParcelado = selectTipo.value === 'parcelado';
             
-            // Mostra ou esconde os campos extras de parcelamento
             divParcelas.style.display = isParcelado ? 'block' : 'none';
             divValorParcela.style.display = isParcelado ? 'block' : 'none';
 
@@ -150,7 +156,6 @@
 
             if (isParcelado && valorTotal > 0 && numParcelas > 0) {
                 const valorParcela = valorTotal / numParcelas;
-                // Formata o valor para o padrão brasileiro (R$)
                 campoValorParcelaView.value = valorParcela.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
@@ -160,12 +165,11 @@
             }
         }
 
-        // Monitora as mudanças em tempo real (input) nos campos
         selectTipo.addEventListener('change', calcularEAtualizar);
         campoParcelas.addEventListener('input', calcularEAtualizar);
         campoValorTotal.addEventListener('input', calcularEAtualizar);
         
-        // Inicializa o estado dos campos ao carregar a página
+        // Inicializa o estado dos campos e cálculos ao carregar
         calcularEAtualizar();
     });
 </script>
