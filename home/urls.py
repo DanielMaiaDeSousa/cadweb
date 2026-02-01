@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import path
 
 urlpatterns = [
     path('', views.index, name="index"),
@@ -36,5 +38,10 @@ urlpatterns = [
     path('pedido/remover-item/<int:id>/', views.remover_item_pedido, name='remover_item_pedido'),
     path('pedido/remover/<int:id>/', views.remover_pedido, name='remover_pedido'),
     path('pedido/pagamento/<int:pedido_id>/', views.registrar_pagamento, name='registrar_pagamento'),
+    
+    #--- AUTENTICAÇÃO ---
+    
+    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     
 ]

@@ -2,16 +2,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from django.apps import apps
+from django.contrib.auth.decorators import login_required
 
 # Importação de modelos e formulários corrigida
 from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento
 from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm, PagamentoForm
 
 # --- INDEX ---
+@login_required
 def index(request):
     return render(request, 'index.html')
 
 # --- CATEGORIAS ---
+@login_required
 def categoria(request):
     contexto = {'lista': Categoria.objects.all().order_by('ordem')}
     return render(request, 'categoria/lista.html', contexto)
@@ -46,6 +49,7 @@ def remover_categoria(request, id):
     return redirect('categoria')
 
 # --- CLIENTES ---
+@login_required
 def cliente(request):
     contexto = {'lista': Cliente.objects.all().order_by('-id')}
     return render(request, 'cliente/lista.html', contexto)
@@ -80,6 +84,7 @@ def remover_cliente(request, id):
     return redirect('cliente')
 
 # --- PRODUTOS ---
+@login_required
 def produto(request):
     contexto = {'lista': Produto.objects.all().order_by('-id')}
     return render(request, 'produto/lista.html', contexto)
@@ -162,6 +167,7 @@ def buscar_dados(request, app_model):
     return JsonResponse(dados, safe=False)
 
 # --- PEDIDOS ---
+@login_required
 def pedido(request):
     lista = Pedido.objects.all().order_by('-id')
     return render(request, 'pedido/lista.html', {'lista': lista})
@@ -171,6 +177,7 @@ def novo_pedido(request, cliente_id):
     pedido_obj = Pedido.objects.create(cliente=cliente, status=1) 
     return redirect('detalhes_pedido', id=pedido_obj.id)
 
+@login_required
 def detalhes_pedido(request, id):
     pedido_obj = get_object_or_404(Pedido, pk=id)
     if request.method == 'POST':
@@ -205,6 +212,7 @@ def remover_pedido(request, id):
     return redirect('pedido')
 
 # --- PAGAMENTOS ---
+@login_required
 def registrar_pagamento(request, pedido_id):
     # Busca o pedido ou retorna 404 caso não exista
     pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
