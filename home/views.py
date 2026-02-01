@@ -132,12 +132,14 @@ def ajustar_estoque(request, id):
 # --- BUSCA GENÉRICA / AUTOCOMPLETE ---
 # home/views.py
 
+# home/views.py
+
 def buscar_dados(request, app_model):
     termo = request.GET.get('q', '')
     app_label, model_name = app_model.split('.')
     model = apps.get_model(app_label, model_name)
     
-    # Filtramos os resultados (ex: Produtos ou Categorias)
+    # Filtramos os produtos pelo nome
     resultados = model.objects.filter(nome__icontains=termo)[:10]
     
     dados = []
@@ -146,9 +148,15 @@ def buscar_dados(request, app_model):
             'id': obj.id, 
             'nome': obj.nome,
         }
-        # Se o modelo (como o Produto) tiver o atributo preco, adicionamos aos dados
+        
+        # Se for um Produto, adicionamos o preço e a imagem
         if hasattr(obj, 'preco') and obj.preco:
-            item['preco'] = str(obj.preco) # Convertemos para string para o JSON
+            item['preco'] = str(obj.preco)
+            
+        if hasattr(obj, 'img_base64'):
+            # O JS espera o campo 'img_base64'
+            item['img_base64'] = obj.img_base64 if obj.img_base64 else None
+            
         dados.append(item)
         
     return JsonResponse(dados, safe=False)
@@ -198,7 +206,7 @@ def remover_pedido(request, id):
 
 # --- PAGAMENTOS ---
 def registrar_pagamento(request, pedido_id):
-    """View para gerenciar múltiplos pagamentos (Total, Pago, Débito)"""
+    # Busca o pedido ou retorna 404 caso não exista
     pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
     
     if request.method == 'POST':
@@ -207,21 +215,39 @@ def registrar_pagamento(request, pedido_id):
         
         if valor and forma:
             try:
-                # Trata o valor para o formato decimal do Python
+                # Converte o valor para decimal tratando a vírgula para o formato Python
                 valor_decimal = float(valor.replace(',', '.'))
                 
-                # Registra o pagamento vinculado ao pedido
-                Pagamento.objects.create(
-                    pedido=pedido_obj,
-                    valor=valor_decimal,
-                    forma=forma
-                )
-                messages.success(request, "Pagamento registado com sucesso!")
+                # INCREMENTO 1: Validação rigorosa para impedir saldo negativo
+                if valor_decimal > pedido_obj.debito_restante:
+                    messages.error(
+                        request, 
+                        f"Erro: O valor (R$ {valor_decimal:.2f}) excede o débito restante (R$ {pedido_obj.debito_restante:.2f})."
+                    )
+                elif valor_decimal <= 0:
+                    messages.error(request, "Erro: O valor do pagamento deve ser maior que zero.")
+                else:
+                    # Cria o registro de pagamento no banco de dados
+                    Pagamento.objects.create(
+                        pedido=pedido_obj,
+                        valor=valor_decimal,
+                        forma=forma
+                    )
+                    
+                    # INCREMENTO 2: Atualização automática de status
+                    # Se após o pagamento o débito for zerado, o pedido é concluído automaticamente
+                    if pedido_obj.debito_restante <= 0:
+                        pedido_obj.status = 3  # Status 3 corresponde a 'Concluído'
+                        pedido_obj.save()
+                        messages.success(request, "Pagamento total recebido. Pedido concluído!")
+                    else:
+                        messages.success(request, "Pagamento parcial registrado com sucesso!")
+                        
             except ValueError:
-                messages.error(request, "Valor de pagamento inválido.")
-        else:
-            messages.error(request, "Preencha todos os campos corretamente.")
-            
+                messages.error(request, "Erro: O valor digitado é inválido.")
+        
+        # Redireciona para a mesma página para atualizar o histórico e os totais
         return redirect('registrar_pagamento', pedido_id=pedido_id)
 
+    # Renderiza a página de pagamentos enviando o objeto pedido atualizado
     return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj})

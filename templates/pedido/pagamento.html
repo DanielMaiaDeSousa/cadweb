@@ -30,8 +30,14 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Valor a Pagar (R$):</label>
-                    <input type="number" step="0.01" name="valor" class="form-control" placeholder="0,00" required>
+                    <label class="form-label">Valor a Pagar (Máximo R$ {{ pedido.debito_restante }}):</label>
+                    <input type="number" 
+                           step="0.01" 
+                           name="valor" 
+                           class="form-control" 
+                           placeholder="0,00" 
+                           max="{{ pedido.debito_restante|stringformat:'.2f' }}" 
+                           required>
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-success w-100">

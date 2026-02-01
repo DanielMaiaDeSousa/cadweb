@@ -31,11 +31,18 @@
     
     <div class="col-md-6">
         <label for="id_produto_desc" class="form-label">Produto (Autocomplete):</label>
-        <input type="text" id="id_produto_desc" 
-               class="autocomplete form-control" 
-               data-url="{% url 'buscar_dados' 'home.Produto' %}" 
-               data-hidden="#id_produto"
-               placeholder="Digite o nome do produto...">
+        <div class="d-flex align-items-center">
+            <div id="preview_container" class="me-2" style="display: none;">
+                <img id="img_preview_pedido" src="" width="50" height="50" class="img-thumbnail">
+                <span id="produto_preview" class="visually-hidden"></span>
+            </div>
+        
+            <input type="text" id="id_produto_desc" 
+                class="autocomplete form-control" 
+                data-url="{% url 'buscar_dados' 'home.Produto' %}" 
+                data-hidden="#id_produto"
+                placeholder="Digite o nome do produto...">
+        </div>
         {{ form.produto }} 
     </div>
 
@@ -60,9 +67,10 @@
 
 <h5 class="mb-3">Itens do Pedido</h5>
 <div class="table-responsive">
-    <table class="table table-hover table-striped">
+    <table class="table table-hover table-striped align-middle">
         <thead class="table-dark">
             <tr>
+                <th width="80">Imagem</th>
                 <th>Produto</th>
                 <th>Qtd</th>
                 <th>Preço Unitário</th>
@@ -73,6 +81,15 @@
         <tbody>
             {% for item in pedido.itempedido_set.all %}
             <tr>
+                <td>
+                    {% if item.produto.img_base64 %}
+                        <img src="{{ item.produto.img_base64 }}" width="50" height="50" class="img-thumbnail">
+                    {% else %}
+                        <div class="bg-light text-center border rounded" style="width: 50px; height: 50px; line-height: 50px;">
+                            <i class="fas fa-image text-muted"></i>
+                        </div>
+                    {% endif %}
+                </td>
                 <td>{{ item.produto.nome }}</td>
                 <td>{{ item.qtde }}</td>
                 <td>R$ {{ item.preco }}</td>
@@ -91,13 +108,13 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5" class="text-center text-muted">Nenhum item adicionado ainda.</td>
+                <td colspan="6" class="text-center text-muted">Nenhum item adicionado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot class="table-light">
             <tr>
-                <td colspan="3" class="text-end"><strong>Total do Pedido:</strong></td>
+                <td colspan="4" class="text-end"><strong>Total do Pedido:</strong></td>
                 <td colspan="2"><strong>R$ {{ pedido.valor_total_pedido }}</strong></td>
             </tr>
         </tfoot>
