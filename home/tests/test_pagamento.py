@@ -7,7 +7,11 @@ from decimal import Decimal
 class PagamentoFormTests(TestCase):
     def setUp(self):
         self.cliente = Cliente.objects.create(nome='Cliente Teste', cpf='000.000.000-00', datanasc='1990-01-01')
-        self.produto = Produto.objects.create(nome='Produto 1', preco=Decimal('100.00'), categoria=1)
+        self.categoria = None
+        # cria categoria mínima para a FK
+        from home.models import Categoria
+        self.categoria = Categoria.objects.create(nome='Cat Teste', ordem=1)
+        self.produto = Produto.objects.create(nome='Produto 1', preco=Decimal('100.00'), categoria=self.categoria)
         self.pedido = Pedido.objects.create(cliente=self.cliente)
         ItemPedido.objects.create(pedido=self.pedido, produto=self.produto, qtde=1, preco=Decimal('100.00'))
 
