@@ -42,4 +42,7 @@ urlpatterns = [
     path('pedido/pagamento/<int:pedido_id>/', views.registrar_pagamento, name='registrar_pagamento'),
     path('pagamento/<int:pagamento_id>/editar/', views.editar_pagamento, name='editar_pagamento'),
     path('pagamento/<int:pagamento_id>/remover/', views.remover_pagamento, name='remover_pagamento'),
+    
+    # home/urls.py
+    path('pedido/<int:pedido_id>/nota_fiscal/', views.nota_fiscal, name='nota_fiscal'),
 ]

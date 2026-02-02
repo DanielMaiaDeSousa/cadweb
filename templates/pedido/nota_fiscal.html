@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block titulo_conteudo %} Nota Fiscal Eletrônica (SÉRIE 001) {% endblock %}
+
+{% block conteudo %}
+<div class="border p-4 bg-white" id="print-area">
+    <div class="row border-bottom pb-3 mb-3">
+        <div class="col-md-8">
+            <h4><strong>READY TI - SOLUÇÕES TECNOLÓGICAS</strong></h4>
+            <p>CNPJ: 00.000.000/0001-00<br>Endereço: Teresina, PI</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <h5>Nº: {{ pedido.id }}</h5>
+            <small>Chave de Acesso: {{ pedido.chave_acesso }}</small>
+        </div>
+    </div>
+
+    <h5><strong>DADOS DO CLIENTE</strong></h5>
+    <p>Nome: {{ pedido.cliente.nome }} | CPF: {{ pedido.cliente.cpf }}</p>
+
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Qtd</th>
+                <th>V. Unit</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in pedido.itempedido_set.all %}
+            <tr>
+                <td>{{ item.produto.nome }}</td>
+                <td>{{ item.qtde }}</td>
+                <td>R$ {{ item.preco }}</td>
+                <td>R$ {{ item.total_item }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="row mt-4">
+        <div class="col-md-6 border p-2">
+            <strong>CÁLCULO DE IMPOSTOS</strong><br>
+            ICMS (18%): R$ {{ pedido.imposto_icms|floatformat:2 }}<br>
+            IPI (4%): R$ {{ pedido.imposto_ipi|floatformat:2 }}
+        </div>
+        <div class="col-md-6 text-end border p-2">
+            <h4><strong>VALOR TOTAL: R$ {{ pedido.valor_total_pedido }}</strong></h4>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 no-print">
+    <button onclick="window.print();" class="btn btn-success">
+        <i class="fas fa-print"></i> Imprimir Nota
+    </button>
+    <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn btn-secondary">Voltar</a>
+</div>
+{% endblock %}

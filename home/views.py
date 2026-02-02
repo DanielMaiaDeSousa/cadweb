@@ -282,3 +282,9 @@ def detalhes_pagamento(request, pedido_id):
         'pedido': pedido_obj,
         'pagamentos': pagamentos
     })
+    
+# home/views.py
+@login_required
+def nota_fiscal(request, pedido_id):
+    pedido = get_object_or_404(Pedido, pk=pedido_id)
+    return render(request, 'pedido/nota_fiscal.html', {'pedido': pedido})

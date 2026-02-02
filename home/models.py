@@ -1,4 +1,5 @@
 from django.db import models
+import random
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
@@ -58,6 +59,19 @@ class Pedido(models.Model):
     produtos = models.ManyToManyField(Produto, through='ItemPedido')
     data_pedido = models.DateTimeField(auto_now_add=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+    
+    @property
+    def chave_acesso(self):
+        """Gera uma chave de acesso fictícia de 44 dígitos"""
+        return "".join([str(random.randint(0, 9)) for _ in range(44)])
+
+    @property
+    def imposto_icms(self):
+        return float(self.valor_total_pedido) * 0.18 # Alíquota de 18%
+
+    @property
+    def imposto_ipi(self):
+        return float(self.valor_total_pedido) * 0.04 # Alíquota de 4%
 
     @property
     def data_pedidof(self):
