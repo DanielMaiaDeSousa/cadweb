@@ -121,3 +121,9 @@ class Pagamento(models.Model):
         if self.parcelas > 0:
             return self.valor / self.parcelas
         return self.valor
+    
+    @property
+    def data_pagamentof(self):  
+        if self.data_pagamento:
+            return self.data_pagamento.strftime('%d/%m/%Y %H:%M')
+        return None

@@ -263,3 +263,35 @@ def registrar_pagamento(request, pedido_id):
 
     # Renderiza a página de pagamentos enviando o objeto pedido atualizado
     return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj})
+
+# Editar pagamento
+def editar_pagamento(request, pagamento_id):
+    pagamento = get_object_or_404(Pagamento, id=pagamento_id)
+    pedido = pagamento.pedido
+
+    if request.method == 'POST':
+        form = PagamentoForm(request.POST, instance=pagamento, pedido=pedido)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhes_pagamento', pedido_id=pedido.id)
+    else:
+        form = PagamentoForm(instance=pagamento, pedido=pedido)
+
+    return render(request, 'pedido/editar_pagamento.html', {'form': form, 'pedido': pedido})
+
+
+# Remover pagamento
+def remover_pagamento(request, pagamento_id):
+    pagamento = get_object_or_404(Pagamento, id=pagamento_id)
+    pedido_id = pagamento.pedido.id
+    pagamento.delete()
+    return redirect('detalhes_pagamento', pedido_id=pedido_id)
+
+@login_required
+def detalhes_pagamento(request, pedido_id):
+    pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
+    pagamentos = Pagamento.objects.filter(pedido=pedido_obj).order_by('-data_pagamento')
+    return render(request, 'pedido/historico_pagamentos.html', {
+        'pedido': pedido_obj,
+        'pagamentos': pagamentos
+    })
