@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from .models import Pedido, Pagamento, Cliente, Produto
 
 # Importação de modelos e formulários corrigida
 from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento
@@ -11,7 +13,25 @@ from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPed
 # --- INDEX ---
 @login_required
 def index(request):
-    return render(request, 'index.html')
+    # Total de vendas (soma de todos os pagamentos realizados)
+    total_vendas = Pagamento.objects.aggregate(Sum('valor'))['valor__sum'] or 0
+    
+    # Quantidade de novos pedidos (status = 1)
+    novos_pedidos = Pedido.objects.filter(status=1).count()
+    
+    # Quantidade de clientes registrados
+    total_clientes = Cliente.objects.count()
+    
+    # Quantidade de produtos cadastrados
+    total_produtos = Produto.objects.count()
+
+    contexto = {
+        'total_vendas': total_vendas,
+        'novos_pedidos': novos_pedidos,
+        'total_clientes': total_clientes,
+        'total_produtos': total_produtos,
+    }
+    return render(request, 'index.html', contexto)
 
 # --- CATEGORIAS ---
 @login_required
@@ -247,6 +267,7 @@ def registrar_pagamento(request, pedido_id):
 # Editar pagamento
 # home/views.py
 
+@login_required
 def editar_pagamento(request, pagamento_id):
     pagamento = get_object_or_404(Pagamento, id=pagamento_id)
     pedido = pagamento.pedido

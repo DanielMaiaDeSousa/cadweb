@@ -1,73 +1,51 @@
 {% extends "base.html" %}
 
+{% block titulo_conteudo %} Dashboard Administrativo {% endblock titulo_conteudo %}
 
-     
 {% block conteudo %} 
-
-
- 
 <div class="row">
     <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="card card-custom">
-            <div class="card-header card-header-custom">
-                <h5>Novas Ordens</h5>
+            <div class="card-header card-header-custom" style="background-color: #28a745;">
+                <h5>Total de Vendas</h5>
             </div>
             <div class="card-body card-body-custom">
-                <h3>150</h3>
+                <h3>R$ {{ total_vendas|floatformat:2 }}</h3>
             </div>
         </div>
     </div>
+
     <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="card card-custom">
             <div class="card-header card-header-custom">
-                <h5>Bounce Rate</h5>
+                <h5>Novos Pedidos</h5>
             </div>
             <div class="card-body card-body-custom">
-                <h3>53%</h3>
+                <h3>{{ novos_pedidos }}</h3>
             </div>
         </div>
     </div>
+
     <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="card card-custom">
-            <div class="card-header card-header-custom">
-                <h5>User Registrations</h5>
+            <div class="card-header card-header-custom" style="background-color: #17a2b8;">
+                <h5>Clientes</h5>
             </div>
             <div class="card-body card-body-custom">
-                <h3>44</h3>
+                <h3>{{ total_clientes }}</h3>
             </div>
         </div>
     </div>
+
     <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="card card-custom">
-            <div class="card-header card-header-custom">
-                <h5>Unique Visitors</h5>
+            <div class="card-header card-header-custom" style="background-color: #ffc107;">
+                <h5>Produtos</h5>
             </div>
             <div class="card-body card-body-custom">
-                <h3>65</h3>
+                <h3>{{ total_produtos }}</h3>
             </div>
         </div>
     </div>
 </div>
-
-<div class="row">
-    <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="card card-custom">
-            <div class="card-header card-header-custom">
-                <h5>New Orders</h5>
-            </div>
-            <div class="card-body card-body-custom">
-                <h3>150</h3>
-            </div>
-        </div>
-    </div>
-
-
-
-</div>
-
-
 {% endblock conteudo %}
-      
- 
-      
- 

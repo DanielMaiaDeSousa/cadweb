@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from home.forms import PagamentoForm
-from home.models import Cliente, Produto, Pedido, ItemPedido, Pagamento
+from home.models import Cliente, Produto, Pedido, ItemPedido, Pagamento, Estoque
 from decimal import Decimal
 
 class PagamentoFormTests(TestCase):
@@ -71,6 +71,24 @@ class RegistrarPagamentoViewTests(TestCase):
         # Redireciona após sucesso
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Pagamento.objects.filter(pedido=self.pedido).count(), 1)
+
+    def test_pagamento_quita_pedido_baixa_estoque_e_fecha_pedido(self):
+        # cria um estoque inicial e faz o pagamento total
+        Estoque.objects.create(produto=self.produto, quantidade=5)
+        url = reverse('registrar_pagamento', args=[self.pedido.id])
+        response = self.client.post(url, data={
+            'valor': '100,00',
+            'forma': 'dinheiro',
+            'tipo': 'a_vista',
+            'parcelas': 1,
+            'pedido': self.pedido.id
+        })
+        self.assertEqual(response.status_code, 302)
+        estoque = Estoque.objects.get(produto=self.produto)
+        # 5 - 2 (qtde do ItemPedido) = 3
+        self.assertEqual(estoque.quantidade, 3)
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.status, 3)
 
     def test_post_invalido_reexibe_form_com_erro(self):
         url = reverse('registrar_pagamento', args=[self.pedido.id])

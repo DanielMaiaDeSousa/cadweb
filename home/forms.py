@@ -75,22 +75,42 @@ class EstoqueForm(forms.ModelForm):
         }
 
 # --- ITEM PEDIDO (Atividade 17) ---
+# home/forms.py
+
 class ItemPedidoForm(forms.ModelForm):
     class Meta:
         model = ItemPedido
         fields = ['produto', 'qtde', 'preco']
         widgets = {
-            # Atividade 17: O campo produto é hidden para o autocomplete 
             'produto': forms.HiddenInput(), 
             'qtde': forms.NumberInput(attrs={'class': 'form-control'}),
             'preco': forms.TextInput(attrs={'class': 'money form-control'}),
         }
+
     def __init__(self, *args, **kwargs):
         super(ItemPedidoForm, self).__init__(*args, **kwargs)
-        # Ativa localização para tratar vírgulas e pontos nativamente
         self.fields['preco'].localize = True
         self.fields['preco'].widget.is_localized = True
+
+    # --- NOVA VALIDAÇÃO DE ESTOQUE ---
+    def clean(self):
+        cleaned_data = super().clean()
+        produto = cleaned_data.get('produto')
+        qtde = cleaned_data.get('qtde')
+
+        if produto and qtde:
+            # Busca o estoque vinculado ao produto usando o related_name 'estoque' definido no model
+            estoque_obj = produto.estoque.first() 
+            
+            # Se não existir registro de estoque ou a quantidade for insuficiente
+            if not estoque_obj or estoque_obj.quantidade < qtde:
+                qtd_disponivel = estoque_obj.quantidade if estoque_obj else 0
+                raise forms.ValidationError(
+                    f"Estoque insuficiente para o produto {produto.nome}. "
+                    f"Quantidade disponível: {qtd_disponivel}."
+                )
         
+        return cleaned_data        
 # home/forms.py
 
 class PagamentoForm(forms.ModelForm):
