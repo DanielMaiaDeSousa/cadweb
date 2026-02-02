@@ -217,67 +217,54 @@ def registrar_pagamento(request, pedido_id):
     # Busca o pedido ou retorna 404 caso não exista
     pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
     
+    # Instancia o form para renderização (usado também para fornecer data-debito no campo valor)
+    form = PagamentoForm(pedido=pedido_obj)
+    
     if request.method == 'POST':
-        valor = request.POST.get('valor')
-        forma = request.POST.get('forma')
-        tipo = request.POST.get('tipo')  # Novo: Captura se é à vista ou parcelado
-        parcelas = request.POST.get('parcelas', 1)  # Novo: Captura o número de parcelas (padrão 1)
-        
-        if valor and forma and tipo:
-            try:
-                # Converte o valor para decimal tratando a vírgula para o formato Python
-                valor_decimal = float(valor.replace(',', '.'))
-                
-                # VALIDAÇÃO: Impede que o pagamento deixe o saldo negativo
-                if valor_decimal > pedido_obj.debito_restante:
-                    messages.error(
-                        request, 
-                        f"Erro: O valor (R$ {valor_decimal:.2f}) excede o débito restante (R$ {pedido_obj.debito_restante:.2f})."
-                    )
-                elif valor_decimal <= 0:
-                    messages.error(request, "Erro: O valor do pagamento deve ser maior que zero.")
-                else:
-                    # Cria o registro de pagamento incluindo os novos campos de tipo e parcelas
-                    Pagamento.objects.create(
-                        pedido=pedido_obj,
-                        valor=valor_decimal,
-                        forma=forma,
-                        tipo=tipo,
-                        parcelas=int(parcelas) if tipo == 'parcelado' else 1
-                    )
-                    
-                    # Atualização automática de status: Se quitado, o pedido é concluído automaticamente
-                    # Note: O cálculo do debito_restante deve ser feito após a criação do pagamento
-                    if pedido_obj.debito_restante <= 0:
-                        pedido_obj.status = 3  # Status 3 corresponde a 'Concluído'
-                        pedido_obj.save()
-                        messages.success(request, "Pagamento total recebido. Pedido concluído!")
-                    else:
-                        messages.success(request, "Pagamento parcial registrado com sucesso!")
-                        
-            except ValueError:
-                messages.error(request, "Erro: O valor ou número de parcelas digitado é inválido.")
-        
-        # Redireciona para a mesma página para atualizar o histórico e os totais
-        return redirect('registrar_pagamento', pedido_id=pedido_id)
+        # Usa o form para validar e salvar corretamente
+        form = PagamentoForm(request.POST, pedido=pedido_obj)
+        if form.is_valid():
+            pagamento = form.save(commit=False)
+            pagamento.pedido = pedido_obj
+            pagamento.save()
 
-    # Renderiza a página de pagamentos enviando o objeto pedido atualizado
-    return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj})
+            # Atualiza status do pedido se quitado
+            if pedido_obj.debito_restante <= 0:
+                pedido_obj.status = 3
+                pedido_obj.save()
+                messages.success(request, "Pagamento total recebido. Pedido concluído!")
+            else:
+                messages.success(request, "Pagamento registrado com sucesso!")
+
+            return redirect('registrar_pagamento', pedido_id=pedido_id)
+        else:
+            # Em caso de erro, renderiza a página com o formulário (erros serão exibidos)
+            return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
+
+    # Renderiza a página de pagamentos enviando o objeto pedido atualizado e o form
+    return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
 
 # Editar pagamento
+# home/views.py
+
 def editar_pagamento(request, pagamento_id):
     pagamento = get_object_or_404(Pagamento, id=pagamento_id)
     pedido = pagamento.pedido
 
     if request.method == 'POST':
-        form = PagamentoForm(request.POST, instance=pagamento, pedido=pedido)
+        # Instância é necessária para o Django saber que é uma edição
+        form = PagamentoForm(request.POST, instance=pagamento)
         if form.is_valid():
             form.save()
-            return redirect('detalhes_pagamento', pedido_id=pedido.id)
+            messages.success(request, "Pagamento atualizado com sucesso!")
+            return redirect('registrar_pagamento', pedido_id=pedido.id)
     else:
-        form = PagamentoForm(instance=pagamento, pedido=pedido)
+        form = PagamentoForm(instance=pagamento)
 
-    return render(request, 'pedido/editar_pagamento.html', {'form': form, 'pedido': pedido})
+    return render(request, 'pedido/editar_pagamento.html', {
+        'form': form, 
+        'pedido': pedido
+    })
 
 
 # Remover pagamento
