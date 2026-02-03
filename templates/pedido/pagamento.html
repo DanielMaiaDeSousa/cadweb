@@ -8,7 +8,7 @@
         <form method="post">
             {% csrf_token %}
 
-            {# Exibe erros não ligados a campos (non_field_errors) #}
+            {# Exibe erros globais que não pertencem a um campo específico #}
             {% if form.non_field_errors %}
                 <div class="alert alert-danger">
                     {{ form.non_field_errors }}
@@ -19,26 +19,28 @@
                 <div class="col-md-4">
                     <label class="form-label">Forma de Pagamento:</label>
                     {{ form.forma }}
-                    {% for err in form.forma.errors %}
-                        <div class="text-danger small">{{ err }}</div>
-                    {% endfor %}
+                    {% if form.forma.errors %}
+                        <div class="text-danger small">{{ form.forma.errors.0 }}</div>
+                    {% endif %}
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">Tipo:</label>
                     {{ form.tipo }}
-                    {% for err in form.tipo.errors %}
-                        <div class="text-danger small">{{ err }}</div>
-                    {% endfor %}
+                    {% if form.tipo.errors %}
+                        <div class="text-danger small">{{ form.tipo.errors.0 }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label">Valor (R$):</label>
                     {{ form.valor }}
-                    {% for err in form.valor.errors %}
-                        <div class="text-danger small">{{ err }}</div>
-                    {% endfor %}
-                    <small class="text-muted d-block">Débito restante: R$ {{ pedido.debito_restante|floatformat:2 }}</small>
+                    {% if form.valor.errors %}
+                        <div class="text-danger small">{{ form.valor.errors.0 }}</div>
+                    {% endif %}
+                    <small class="text-muted d-block">
+                        Débito restante: R$ {{ pedido.debito_restante|floatformat:2 }}
+                    </small>
                 </div>
             </div>
 
@@ -46,9 +48,9 @@
                 <div class="col-md-4" id="div_parcelas" style="display: none;">
                     <label class="form-label">Nº Parcelas:</label>
                     {{ form.parcelas }}
-                    {% for err in form.parcelas.errors %}
-                        <div class="text-danger small">{{ err }}</div>
-                    {% endfor %}
+                    {% if form.parcelas.errors %}
+                        <div class="text-danger small">{{ form.parcelas.errors.0 }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="col-md-4" id="div_valor_parcela" style="display: none;">
@@ -58,13 +60,13 @@
             </div>
 
             <div class="mt-4">
-                <!-- Inclui campo pedido como hidden para maior compatibilidade -->
+                {# O campo pedido como hidden ajuda a view a identificar o ID se necessário #}
                 <input type="hidden" name="pedido" value="{{ pedido.id }}">
 
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Salvar Pagamento
                 </button>
-                <a href="{% url 'registrar_pagamento' pedido.id %}" class="btn btn-secondary">Cancelar</a>
+                <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn btn-secondary">Voltar ao Pedido</a>
             </div>
         </form>
     </div>
@@ -74,7 +76,7 @@
 {% block javascript %}
 <script>
     $(document).ready(function() {
-        // Ativa a lógica de parcelas do seu arquivo funcoes.js
+        // Ativa a lógica de cálculo e visibilidade definida no seu funcoes.js
         if (typeof configurarCalculoParcelas === "function") {
             configurarCalculoParcelas();
         }

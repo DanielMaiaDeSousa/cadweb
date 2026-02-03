@@ -46,6 +46,11 @@
             </div>
 
             <div class="mt-4">
+                <!-- Hidden inputs para garantir envio dos campos quando o select for estilizado -->
+                <!-- Nota: usamos nomes diferentes ('hidden_forma' / 'hidden_tipo') para poder preencher o POST no servidor se necessário -->
+                <input type="hidden" name="hidden_forma" id="hidden_forma">
+                <input type="hidden" name="hidden_tipo" id="hidden_tipo">
+
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Salvar Alterações
                 </button>
@@ -65,6 +70,36 @@
         if (typeof configurarCalculoParcelas === "function") {
             configurarCalculoParcelas();
         }
+
+        // Garante cópia dos selects para hidden inputs antes do submit
+        $('form').on('submit', function(e) {
+            var selForma = $('#id_forma');
+            var selTipo = $('#id_tipo_pagamento');
+
+            console.log('DEBUG editar submit - forma:', {
+                exists: selForma.length > 0,
+                html: selForma.length ? selForma[0].outerHTML : null,
+                value: selForma.val(),
+                name: selForma.attr('name'),
+                disabled: selForma.prop('disabled')
+            });
+            console.log('DEBUG editar submit - tipo:', {
+                exists: selTipo.length > 0,
+                html: selTipo.length ? selTipo[0].outerHTML : null,
+                value: selTipo.val(),
+                name: selTipo.attr('name'),
+                disabled: selTipo.prop('disabled')
+            });
+
+            if (selForma.length && !selForma.attr('name')) selForma.attr('name', 'forma');
+            if (selTipo.length && !selTipo.attr('name')) selTipo.attr('name', 'tipo');
+
+            if (selForma.length && selForma.prop('disabled')) selForma.prop('disabled', false);
+            if (selTipo.length && selTipo.prop('disabled')) selTipo.prop('disabled', false);
+
+            $('#hidden_forma').val($('#id_forma').val());
+            $('#hidden_tipo').val($('#id_tipo_pagamento').val());
+        });
     });
 </script>
 {% endblock %}

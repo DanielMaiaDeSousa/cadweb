@@ -4,7 +4,11 @@ from django.http import JsonResponse
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+import logging
 from .models import Pedido, Pagamento, Cliente, Produto
+
+logger = logging.getLogger(__name__)
+
 
 # Importação de modelos e formulários corrigida
 from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento
@@ -241,8 +245,20 @@ def registrar_pagamento(request, pedido_id):
     form = PagamentoForm(pedido=pedido_obj)
     
     if request.method == 'POST':
+        # Pre-processa o POST: se os selects foram manipulados e chegaram vazios,
+        # tenta usar os valores dos hidden inputs 'hidden_forma'/'hidden_tipo'.
+        data = request.POST.copy()
+        # Se 'forma' estiver ausente ou vazia, e o hidden tiver valor, injeta
+        hidden_forma = request.POST.get('hidden_forma')
+        if (not data.get('forma') or data.get('forma') == '') and hidden_forma:
+            data['forma'] = hidden_forma
+
+        hidden_tipo = request.POST.get('hidden_tipo')
+        if (not data.get('tipo') or data.get('tipo') == '') and hidden_tipo:
+            data['tipo'] = hidden_tipo
+
         # Usa o form para validar e salvar corretamente
-        form = PagamentoForm(request.POST, pedido=pedido_obj)
+        form = PagamentoForm(data, pedido=pedido_obj)
         if form.is_valid():
             pagamento = form.save(commit=False)
             pagamento.pedido = pedido_obj
@@ -259,6 +275,17 @@ def registrar_pagamento(request, pedido_id):
             return redirect('registrar_pagamento', pedido_id=pedido_id)
         else:
             # Em caso de erro, renderiza a página com o formulário (erros serão exibidos)
+            # DEBUG: registra o POST recebido e os erros do form para ajudar diagnóstico
+            try:
+                # imprime para console do servidor (útil em ambientes de desenvolvimento)
+                print('DEBUG registrar_pagamento - POST:', dict(request.POST))
+                print('DEBUG registrar_pagamento - form.errors:', form.errors.as_json())
+                logger.debug('registrar_pagamento - POST: %s', dict(request.POST))
+                logger.debug('registrar_pagamento - form.errors: %s', form.errors.as_json())
+            except Exception as e:
+                # Não interrompe o fluxo caso haja problema ao logar
+                logger.exception('Erro ao registrar debug de pagamento: %s', e)
+
             return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
 
     # Renderiza a página de pagamentos enviando o objeto pedido atualizado e o form
@@ -273,17 +300,36 @@ def editar_pagamento(request, pagamento_id):
     pedido = pagamento.pedido
 
     if request.method == 'POST':
+        # Pre-processa o POST similar ao registrar_pagamento (usa hidden_forma/hidden_tipo se necessário)
+        data = request.POST.copy()
+        hidden_forma = request.POST.get('hidden_forma')
+        if (not data.get('forma') or data.get('forma') == '') and hidden_forma:
+            data['forma'] = hidden_forma
+
+        hidden_tipo = request.POST.get('hidden_tipo')
+        if (not data.get('tipo') or data.get('tipo') == '') and hidden_tipo:
+            data['tipo'] = hidden_tipo
+
         # Instância é necessária para o Django saber que é uma edição
-        form = PagamentoForm(request.POST, instance=pagamento)
+        form = PagamentoForm(data, instance=pagamento)
         if form.is_valid():
             form.save()
             messages.success(request, "Pagamento atualizado com sucesso!")
             return redirect('registrar_pagamento', pedido_id=pedido.id)
+        else:
+            # DEBUG: registra o POST recebido e os erros do form para ajudar diagnóstico
+            try:
+                print('DEBUG editar_pagamento - POST:', dict(request.POST))
+                print('DEBUG editar_pagamento - form.errors:', form.errors.as_json())
+                logger.debug('editar_pagamento - POST: %s', dict(request.POST))
+                logger.debug('editar_pagamento - form.errors: %s', form.errors.as_json())
+            except Exception as e:
+                logger.exception('Erro ao registrar debug de editar pagamento: %s', e)
     else:
         form = PagamentoForm(instance=pagamento)
 
     return render(request, 'pedido/editar_pagamento.html', {
-        'form': form, 
+        'form': form,
         'pedido': pedido
     })
 

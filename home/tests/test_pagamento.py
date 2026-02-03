@@ -102,3 +102,43 @@ class RegistrarPagamentoViewTests(TestCase):
         # Deve reexibir a página com erros (status 200)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'excede o débito restante')
+
+
+class EditarPagamentoViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.cliente = Cliente.objects.create(nome='Cliente Edit', cpf='222.222.222-22', datanasc='1990-01-01')
+        from home.models import Categoria
+        self.categoria = Categoria.objects.create(nome='Cat Edit', ordem=1)
+        self.produto = Produto.objects.create(nome='Produto Edit', preco=Decimal('25.00'), categoria=self.categoria)
+        self.pedido = Pedido.objects.create(cliente=self.cliente)
+        ItemPedido.objects.create(pedido=self.pedido, produto=self.produto, qtde=1, preco=Decimal('25.00'))
+        self.pagamento = Pagamento.objects.create(pedido=self.pedido, valor=Decimal('25.00'), forma='dinheiro', tipo='a_vista', parcelas=1)
+
+    def test_post_edit_with_hidden_fields_updates(self):
+        url = reverse('editar_pagamento', args=[self.pagamento.id])
+        response = self.client.post(url, data={
+            'valor': '30,00',
+            # omit 'forma' and 'tipo' to simulate selects not being sent by the browser
+            'parcelas': 1,
+            'hidden_forma': 'pix',
+            'hidden_tipo': 'a_vista',
+            'pedido': self.pedido.id
+        })
+        # deve redirecionar após sucesso
+        self.assertEqual(response.status_code, 302)
+        self.pagamento.refresh_from_db()
+        self.assertEqual(self.pagamento.forma, 'pix')
+        self.assertEqual(self.pagamento.tipo, 'a_vista')
+        self.assertEqual(self.pagamento.valor, Decimal('30.00'))
+
+    def test_post_edit_without_hidden_fails(self):
+        url = reverse('editar_pagamento', args=[self.pagamento.id])
+        response = self.client.post(url, data={
+            'valor': '30,00',
+            'parcelas': 1,
+            'pedido': self.pedido.id
+        })
+        # Deve reexibir a página com erro (status 200) e mensagem de campo obrigatório
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Este campo é obrigatório')
