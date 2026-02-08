@@ -110,6 +110,7 @@ class ItemPedido(models.Model):
     def __str__(self):
         return f"{self.produto.nome} (Qtd: {self.qtde})"
 
+# --- PAGAMENTO ---
 class Pagamento(models.Model):
     FORMA_CHOICES = [
         ('dinheiro', 'Dinheiro'),

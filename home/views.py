@@ -5,28 +5,21 @@ from django.apps import apps
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 import logging
-from .models import Pedido, Pagamento, Cliente, Produto
+from decimal import Decimal
+from .models import Pedido  # ajuste para o nome correto do seu modelo
 
-logger = logging.getLogger(__name__)
-
-
-# Importação de modelos e formulários corrigida
+# Importação de modelos e formulários
 from .models import Categoria, Cliente, Produto, Estoque, Pedido, ItemPedido, Pagamento
 from .forms import CategoriaForm, ClienteForm, ProdutoForm, EstoqueForm, ItemPedidoForm, PagamentoForm
+
+logger = logging.getLogger(__name__)
 
 # --- INDEX ---
 @login_required
 def index(request):
-    # Total de vendas (soma de todos os pagamentos realizados)
     total_vendas = Pagamento.objects.aggregate(Sum('valor'))['valor__sum'] or 0
-    
-    # Quantidade de novos pedidos (status = 1)
     novos_pedidos = Pedido.objects.filter(status=1).count()
-    
-    # Quantidade de clientes registrados
     total_clientes = Cliente.objects.count()
-    
-    # Quantidade de produtos cadastrados
     total_produtos = Produto.objects.count()
 
     contexto = {
@@ -43,6 +36,7 @@ def categoria(request):
     contexto = {'lista': Categoria.objects.all().order_by('ordem')}
     return render(request, 'categoria/lista.html', contexto)
 
+@login_required
 def form_categoria(request):
     form = CategoriaForm(request.POST or None)
     if request.method == 'POST':
@@ -52,6 +46,7 @@ def form_categoria(request):
             return redirect('categoria')
     return render(request, 'categoria/formulario.html', {'form': form})
 
+@login_required
 def editar_categoria(request, id):
     categoria_obj = get_object_or_404(Categoria, pk=id)
     form = CategoriaForm(request.POST or None, instance=categoria_obj)
@@ -62,10 +57,12 @@ def editar_categoria(request, id):
             return redirect('categoria')
     return render(request, 'categoria/formulario.html', {'form': form})
 
+@login_required
 def detalhes_categoria(request, id):
     item = get_object_or_404(Categoria, pk=id)
     return render(request, 'categoria/detalhes.html', {'item': item})
 
+@login_required
 def remover_categoria(request, id):
     item = get_object_or_404(Categoria, pk=id)
     item.delete()
@@ -78,6 +75,7 @@ def cliente(request):
     contexto = {'lista': Cliente.objects.all().order_by('-id')}
     return render(request, 'cliente/lista.html', contexto)
 
+@login_required
 def form_cliente(request):
     form = ClienteForm(request.POST or None)
     if request.method == 'POST':
@@ -87,6 +85,7 @@ def form_cliente(request):
             return redirect('cliente')
     return render(request, 'cliente/form.html', {'form': form})
 
+@login_required
 def editar_cliente(request, id):
     cliente_obj = get_object_or_404(Cliente, pk=id)
     form = ClienteForm(request.POST or None, instance=cliente_obj)
@@ -97,10 +96,12 @@ def editar_cliente(request, id):
             return redirect('cliente')
     return render(request, 'cliente/form.html', {'form': form})
 
+@login_required
 def detalhes_cliente(request, id):
     item = get_object_or_404(Cliente, pk=id)
     return render(request, 'cliente/detalhes.html', {'item': item})
 
+@login_required
 def remover_cliente(request, id):
     item = get_object_or_404(Cliente, pk=id)
     item.delete()
@@ -113,6 +114,7 @@ def produto(request):
     contexto = {'lista': Produto.objects.all().order_by('-id')}
     return render(request, 'produto/lista.html', contexto)
 
+@login_required
 def form_produto(request):
     form = ProdutoForm(request.POST or None)
     if request.method == 'POST':
@@ -122,6 +124,7 @@ def form_produto(request):
             return redirect('produto')
     return render(request, 'produto/form.html', {'form': form})
 
+@login_required
 def editar_produto(request, id):
     produto_obj = get_object_or_404(Produto, pk=id)
     form = ProdutoForm(request.POST or None, instance=produto_obj)
@@ -132,10 +135,12 @@ def editar_produto(request, id):
             return redirect('produto')
     return render(request, 'produto/form.html', {'form': form})
 
+@login_required
 def detalhes_produto(request, id):
     produto = get_object_or_404(Produto, pk=id)
     return render(request, 'produto/detalhes.html', {'item': produto})
 
+@login_required
 def remover_produto(request, id):
     item = get_object_or_404(Produto, pk=id)
     item.delete()
@@ -143,6 +148,7 @@ def remover_produto(request, id):
     return redirect('produto')
 
 # --- ESTOQUE ---
+@login_required
 def ajustar_estoque(request, id):
     produto = get_object_or_404(Produto, pk=id)
     estoque, created = Estoque.objects.get_or_create(produto=produto)
@@ -159,35 +165,21 @@ def ajustar_estoque(request, id):
     return render(request, 'produto/estoque.html', {'form': form, 'produto': produto})
 
 # --- BUSCA GENÉRICA / AUTOCOMPLETE ---
-# home/views.py
-
-# home/views.py
-
+@login_required
 def buscar_dados(request, app_model):
     termo = request.GET.get('q', '')
     app_label, model_name = app_model.split('.')
     model = apps.get_model(app_label, model_name)
-    
-    # Filtramos os produtos pelo nome
     resultados = model.objects.filter(nome__icontains=termo)[:10]
     
     dados = []
     for obj in resultados:
-        item = {
-            'id': obj.id, 
-            'nome': obj.nome,
-        }
-        
-        # Se for um Produto, adicionamos o preço e a imagem
+        item = {'id': obj.id, 'nome': obj.nome}
         if hasattr(obj, 'preco') and obj.preco:
             item['preco'] = str(obj.preco)
-            
         if hasattr(obj, 'img_base64'):
-            # O JS espera o campo 'img_base64'
             item['img_base64'] = obj.img_base64 if obj.img_base64 else None
-            
         dados.append(item)
-        
     return JsonResponse(dados, safe=False)
 
 # --- PEDIDOS ---
@@ -196,6 +188,7 @@ def pedido(request):
     lista = Pedido.objects.all().order_by('-id')
     return render(request, 'pedido/lista.html', {'lista': lista})
 
+@login_required
 def novo_pedido(request, cliente_id):
     cliente = get_object_or_404(Cliente, pk=cliente_id)
     pedido_obj = Pedido.objects.create(cliente=cliente, status=1) 
@@ -222,6 +215,7 @@ def detalhes_pedido(request, id):
         'itens': itens
     })
 
+@login_required
 def remover_item_pedido(request, id):
     item = get_object_or_404(ItemPedido, pk=id)
     pedido_id = item.pedido.id
@@ -229,6 +223,7 @@ def remover_item_pedido(request, id):
     messages.success(request, "Produto removido!")
     return redirect('detalhes_pedido', id=pedido_id)
 
+@login_required
 def remover_pedido(request, id):
     pedido_obj = get_object_or_404(Pedido, pk=id)
     pedido_obj.delete()
@@ -238,61 +233,33 @@ def remover_pedido(request, id):
 # --- PAGAMENTOS ---
 @login_required
 def registrar_pagamento(request, pedido_id):
-    # Busca o pedido ou retorna 404 caso não exista
     pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
-    
-    # Instancia o form para renderização (usado também para fornecer data-debito no campo valor)
     form = PagamentoForm(pedido=pedido_obj)
     
     if request.method == 'POST':
-        # Pre-processa o POST: se os selects foram manipulados e chegaram vazios,
-        # tenta usar os valores dos hidden inputs 'hidden_forma'/'hidden_tipo'.
         data = request.POST.copy()
-        # Se 'forma' estiver ausente ou vazia, e o hidden tiver valor, injeta
-        hidden_forma = request.POST.get('hidden_forma')
-        if (not data.get('forma') or data.get('forma') == '') and hidden_forma:
-            data['forma'] = hidden_forma
+        
+        # Recupera valores de campos hidden caso os originais sumam no POST
+        if not data.get('forma'): data['forma'] = request.POST.get('hidden_forma')
+        if not data.get('tipo'): data['tipo'] = request.POST.get('hidden_tipo')
 
-        hidden_tipo = request.POST.get('hidden_tipo')
-        if (not data.get('tipo') or data.get('tipo') == '') and hidden_tipo:
-            data['tipo'] = hidden_tipo
-
-        # Usa o form para validar e salvar corretamente
         form = PagamentoForm(data, pedido=pedido_obj)
         if form.is_valid():
             pagamento = form.save(commit=False)
             pagamento.pedido = pedido_obj
-            pagamento.save()
+            pagamento.save()  # Dispara o Signal de baixa de estoque
 
-            # Atualiza status do pedido se quitado
-            if pedido_obj.debito_restante <= 0:
-                pedido_obj.status = 3
-                pedido_obj.save()
+            # REFRESH: Atualiza o objeto em memória com o status alterado pelo Signal
+            pedido_obj.refresh_from_db() 
+
+            if pedido_obj.status == 3:
                 messages.success(request, "Pagamento total recebido. Pedido concluído!")
             else:
                 messages.success(request, "Pagamento registrado com sucesso!")
 
             return redirect('registrar_pagamento', pedido_id=pedido_id)
-        else:
-            # Em caso de erro, renderiza a página com o formulário (erros serão exibidos)
-            # DEBUG: registra o POST recebido e os erros do form para ajudar diagnóstico
-            try:
-                # imprime para console do servidor (útil em ambientes de desenvolvimento)
-                print('DEBUG registrar_pagamento - POST:', dict(request.POST))
-                print('DEBUG registrar_pagamento - form.errors:', form.errors.as_json())
-                logger.debug('registrar_pagamento - POST: %s', dict(request.POST))
-                logger.debug('registrar_pagamento - form.errors: %s', form.errors.as_json())
-            except Exception as e:
-                # Não interrompe o fluxo caso haja problema ao logar
-                logger.exception('Erro ao registrar debug de pagamento: %s', e)
-
-            return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
-
-    # Renderiza a página de pagamentos enviando o objeto pedido atualizado e o form
+    
     return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
-
-# Editar pagamento
-# home/views.py
 
 @login_required
 def editar_pagamento(request, pagamento_id):
@@ -300,17 +267,10 @@ def editar_pagamento(request, pagamento_id):
     pedido = pagamento.pedido
 
     if request.method == 'POST':
-        # Pre-processa o POST similar ao registrar_pagamento (usa hidden_forma/hidden_tipo se necessário)
         data = request.POST.copy()
-        hidden_forma = request.POST.get('hidden_forma')
-        if (not data.get('forma') or data.get('forma') == '') and hidden_forma:
-            data['forma'] = hidden_forma
+        if not data.get('forma'): data['forma'] = request.POST.get('hidden_forma')
+        if not data.get('tipo'): data['tipo'] = request.POST.get('hidden_tipo')
 
-        hidden_tipo = request.POST.get('hidden_tipo')
-        if (not data.get('tipo') or data.get('tipo') == '') and hidden_tipo:
-            data['tipo'] = hidden_tipo
-
-        # Instância é necessária para o Django saber que é uma edição
         form = PagamentoForm(data, instance=pagamento)
         if form.is_valid():
             form.save()
@@ -328,30 +288,79 @@ def editar_pagamento(request, pagamento_id):
     else:
         form = PagamentoForm(instance=pagamento)
 
-    return render(request, 'pedido/editar_pagamento.html', {
-        'form': form,
-        'pedido': pedido
-    })
+    return render(request, 'pedido/editar_pagamento.html', {'form': form, 'pedido': pedido})
 
-
-# Remover pagamento
 def remover_pagamento(request, pagamento_id):
     pagamento = get_object_or_404(Pagamento, id=pagamento_id)
     pedido_id = pagamento.pedido.id
     pagamento.delete()
-    return redirect('detalhes_pagamento', pedido_id=pedido_id)
+    messages.success(request, "Pagamento removido!")
+    return redirect('registrar_pagamento', pedido_id=pedido_id)
 
-@login_required
-def detalhes_pagamento(request, pedido_id):
-    pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
-    pagamentos = Pagamento.objects.filter(pedido=pedido_obj).order_by('-data_pagamento')
-    return render(request, 'pedido/historico_pagamentos.html', {
-        'pedido': pedido_obj,
-        'pagamentos': pagamentos
-    })
-    
-# home/views.py
-@login_required
 def nota_fiscal(request, pedido_id):
     pedido = get_object_or_404(Pedido, pk=pedido_id)
-    return render(request, 'pedido/nota_fiscal.html', {'pedido': pedido})
+    itens = ItemPedido.objects.filter(pedido=pedido)
+    pagamentos = Pagamento.objects.filter(pedido=pedido)
+
+    contexto = {
+        'pedido': pedido,
+        'itens': itens,
+        'pagamentos': pagamentos,
+    }
+    return render(request, 'pedido/nota_fiscal.html', contexto) 
+
+@login_required
+def registrar_pagamento(request, pedido_id):
+    pedido_obj = get_object_or_404(Pedido, pk=pedido_id)
+    form = PagamentoForm(pedido=pedido_obj)
+    
+    if request.method == 'POST':
+        data = request.POST.copy()
+        # O JS envia 'hidden_forma' e 'hidden_tipo' se os campos principais estiverem readonly
+        if not data.get('forma'): data['forma'] = request.POST.get('hidden_forma')
+        if not data.get('tipo'): data['tipo'] = request.POST.get('hidden_tipo')
+
+        form = PagamentoForm(data, pedido=pedido_obj)
+        if form.is_valid():
+            pagamento = form.save(commit=False)
+            pagamento.pedido = pedido_obj
+            pagamento.save() 
+
+            # REFRESH: Essencial para ver a mudança feita pelo Signal no status do pedido
+            pedido_obj.refresh_from_db()
+
+            if pedido_obj.status == 3:
+                messages.success(request, "Pagamento total recebido. Pedido concluído!")
+            else:
+                messages.success(request, "Pagamento registrado com sucesso!")
+
+            return redirect('registrar_pagamento', pedido_id=pedido_id)
+    
+    return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
+
+@login_required
+def editar_pagamento(request, pagamento_id):
+    pagamento = get_object_or_404(Pagamento, id=pagamento_id)
+    pedido = pagamento.pedido
+    if request.method == 'POST':
+        data = request.POST.copy()
+        # Garante que campos ocultos pelo JS sejam preenchidos no POST
+        if not data.get('forma'): data['forma'] = request.POST.get('hidden_forma')
+        if not data.get('tipo'): data['tipo'] = request.POST.get('hidden_tipo')
+        
+        form = PagamentoForm(data, instance=pagamento)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Pagamento atualizado!")
+            return redirect('registrar_pagamento', pedido_id=pedido.id)
+    else:
+        form = PagamentoForm(instance=pagamento)
+    return render(request, 'pedido/editar_pagamento.html', {'form': form, 'pedido': pedido})
+
+@login_required
+def remover_pagamento(request, pagamento_id):
+    pagamento = get_object_or_404(Pagamento, id=pagamento_id)
+    pedido_id = pagamento.pedido.id
+    pagamento.delete()
+    messages.success(request, "Pagamento removido!")
+    return redirect('registrar_pagamento', pedido_id=pedido_id)

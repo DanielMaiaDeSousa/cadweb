@@ -182,24 +182,24 @@ class PagamentoForm(forms.ModelForm):
         return valor
 
     def clean_parcelas(self):
+        # Tenta pegar do cleaned_data primeiro, se falhar, tenta o dado bruto do POST
+        tipo = self.cleaned_data.get('tipo') or self.data.get('tipo')
         parcelas = self.cleaned_data.get('parcelas')
-        tipo = self.data.get('tipo') # Pega o dado bruto do POST para conferir o tipo
 
-    # Se for à vista, ignoramos o que vier no campo parcelas e forçamos 1
-        if tipo == 'a_vista':
+        # Se for à vista (ou qualquer coisa que não seja parcelado), força 1
+        if tipo != 'parcelado':
             return 1
-    
+        
+        # Validação rigorosa para parcelados
         if not parcelas or int(parcelas) < 1:
-            raise ValidationError('Para pagamentos parcelados, informe o número de parcelas (mínimo 1).')
-    
+            raise ValidationError('Para pagamentos parcelados, informe o número de parcelas.')
+        
         return parcelas
 
     def clean(self):
-        cleaned = super().clean()
-        tipo = cleaned.get('tipo')
-    
-    # Se não for parcelado, garantimos que o sistema entenda como 1 parcela
+        cleaned_data = super().clean()
+        # Garante que o valor de parcelas seja propagado corretamente para o objeto final
+        tipo = cleaned_data.get('tipo')
         if tipo != 'parcelado':
-            cleaned['parcelas'] = 1
-        
-        return cleaned
+            cleaned_data['parcelas'] = 1
+        return cleaned_data
