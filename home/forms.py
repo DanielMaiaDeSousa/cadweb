@@ -182,17 +182,17 @@ class PagamentoForm(forms.ModelForm):
         return valor
 
     def clean_parcelas(self):
-        # Tenta pegar do cleaned_data primeiro, se falhar, tenta o dado bruto do POST
-        tipo = self.cleaned_data.get('tipo') or self.data.get('tipo')
+        # Pega o dado bruto do POST para garantir a verificação do tipo
+        tipo = self.data.get('tipo')
         parcelas = self.cleaned_data.get('parcelas')
 
-        # Se for à vista (ou qualquer coisa que não seja parcelado), força 1
+        # Se NÃO for parcelado, forçamos 1 (independente do que vier no campo)
         if tipo != 'parcelado':
             return 1
         
-        # Validação rigorosa para parcelados
+        # Validação para parcelados
         if not parcelas or int(parcelas) < 1:
-            raise ValidationError('Para pagamentos parcelados, informe o número de parcelas.')
+            raise forms.ValidationError('Para pagamentos parcelados, informe o número de parcelas.')
         
         return parcelas
 

@@ -5,10 +5,10 @@
 {% block conteudo %}
 <div class="card shadow-sm">
     <div class="card-body">
-        <form method="post">
+        <form method="post" id="formPagamento">
             {% csrf_token %}
 
-            {# Exibe erros globais que não pertencem a um campo específico #}
+            {# Exibe erros globais do formulário #}
             {% if form.non_field_errors %}
                 <div class="alert alert-danger">
                     {{ form.non_field_errors }}
@@ -19,6 +19,8 @@
                 <div class="col-md-4">
                     <label class="form-label">Forma de Pagamento:</label>
                     {{ form.forma }}
+                    {# Campo oculto de segurança para a forma #}
+                    <input type="hidden" name="hidden_forma" id="hidden_forma" value="{{ form.forma.value|default:'' }}">
                     {% if form.forma.errors %}
                         <div class="text-danger small">{{ form.forma.errors.0 }}</div>
                     {% endif %}
@@ -27,6 +29,8 @@
                 <div class="col-md-4">
                     <label class="form-label">Tipo:</label>
                     {{ form.tipo }}
+                    {# Campo oculto essencial para garantir o envio de 'a_vista' #}
+                    <input type="hidden" name="hidden_tipo" id="hidden_tipo" value="{{ form.tipo.value|default:'a_vista' }}">
                     {% if form.tipo.errors %}
                         <div class="text-danger small">{{ form.tipo.errors.0 }}</div>
                     {% endif %}
@@ -38,8 +42,8 @@
                     {% if form.valor.errors %}
                         <div class="text-danger small">{{ form.valor.errors.0 }}</div>
                     {% endif %}
-                    <small class="text-muted d-block">
-                        Débito restante: R$ {{ pedido.debito_restante|floatformat:2 }}
+                    <small class="text-muted d-block mt-1">
+                        Débito restante: <strong>R$ {{ pedido.debito_restante|floatformat:2 }}</strong> [cite: 22]
                     </small>
                 </div>
             </div>
@@ -59,14 +63,15 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                {# O campo pedido como hidden ajuda a view a identificar o ID se necessário #}
+            <div class="mt-4 border-top pt-3">
                 <input type="hidden" name="pedido" value="{{ pedido.id }}">
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Salvar Pagamento
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-save"></i> Confirmar Pagamento
                 </button>
-                <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn btn-secondary">Voltar ao Pedido</a>
+                <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar ao Pedido
+                </a>
             </div>
         </form>
     </div>
@@ -76,11 +81,24 @@
 {% block javascript %}
 <script>
     $(document).ready(function() {
-        // Ativa a lógica de cálculo e visibilidade definida no seu funcoes.js
+        // Inicializa a lógica de parcelas do funcoes.js 
         if (typeof configurarCalculoParcelas === "function") {
             configurarCalculoParcelas();
         }
+
+        // Sincroniza selects com os campos hidden ANTES do submit
+        $('#formPagamento').on('submit', function() {
+            var forma = $('#id_forma').val();
+            // O ID 'id_tipo_pagamento' deve bater com o definido no seu forms.py 
+            var tipo = $('#id_tipo_pagamento').val(); 
+
+            if (forma) {
+                $('#hidden_forma').val(forma);
+            }
+            if (tipo) {
+                $('#hidden_tipo').val(tipo);
+            }
+        });
     });
-    
 </script>
 {% endblock %}

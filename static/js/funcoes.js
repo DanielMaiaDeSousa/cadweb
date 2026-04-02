@@ -93,51 +93,61 @@ function autoComplete(inputSelector) {
  * NOVO: Lógica para cálculo de parcelas em tempo real
  * Esta função deve ser chamada no $(document).ready() da página de pagamentos
  */
+/**
+ * Configura a lógica de visibilidade e cálculo de parcelas 
+ * na tela de Registrar Pagamento.
+ */
 function configurarCalculoParcelas() {
-    const selectTipo = document.getElementById('id_tipo_pagamento');
-    const divParcelas = document.getElementById('div_parcelas');
-    const divValorParcela = document.getElementById('div_valor_parcela');
-    const campoParcelas = document.getElementById('id_parcelas');
-    const campoValorTotal = document.getElementById('id_valor_pagamento');
-    const campoValorParcelaView = document.getElementById('id_valor_parcela_view');
+    const campoTipo = $('#id_tipo_pagamento');
+    const campoParcelas = $('#id_parcelas');
+    const campoValorTotal = $('#id_valor_pagamento');
+    const campoValorParcelaView = $('#id_valor_parcela_view');
 
-    if (!campoValorTotal) return;
+    const divParcelas = $('#div_parcelas');
+    const divValorParcela = $('#div_valor_parcela');
 
-    // 1. Preenchimento Automático ao carregar
-    const valorDebito = campoValorTotal.getAttribute('data-debito');
-    // Se o campo estiver vazio ou for zero, ele assume o valor do débito restante
-    if (valorDebito && (campoValorTotal.value === "" || parseFloat(campoValorTotal.value) === 0)) {
-        campoValorTotal.value = valorDebito;
-    }
+    function atualizarInterface() {
+        const tipo = campoTipo.val();
 
-    function atualizarCalculo() {
-        if (!selectTipo) return;
-        const isParcelado = selectTipo.value === 'parcelado';
-        
-        if (divParcelas) divParcelas.style.display = isParcelado ? 'block' : 'none';
-        if (divValorParcela) divValorParcela.style.display = isParcelado ? 'block' : 'none';
-
-        const valorTotal = parseFloat(campoValorTotal.value) || 0;
-        const numParcelas = parseInt(campoParcelas.value) || 1;
-
-        if (isParcelado && valorTotal > 0 && numParcelas > 0) {
-            const valorParcela = valorTotal / numParcelas;
-            if (campoValorParcelaView) {
-                campoValorParcelaView.value = valorParcela.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                });
-            }
-        } else if (campoValorParcelaView) {
-            campoValorParcelaView.value = "";
+        if (tipo === 'parcelado') {
+            divParcelas.fadeIn();
+            divValorParcela.fadeIn();
+            campoTipo.val('parcelado'); // 🔹 garante consistência
+            calcularValorParcela();
+        } else {
+            // Se for à vista, esconde os campos e reseta as parcelas para 1
+            divParcelas.fadeOut();
+            divValorParcela.fadeOut();
+            campoParcelas.val(1);
+            campoTipo.val('a_vista'); // 🔹 agora funciona corretamente
+            campoValorParcelaView.val(''); // limpa o campo de parcelas
         }
     }
 
-    // Ouvintes de eventos
-    if (selectTipo) selectTipo.addEventListener('change', atualizarCalculo);
-    campoParcelas.addEventListener('input', atualizarCalculo);
-    campoValorTotal.addEventListener('input', atualizarCalculo);
-    
-    // Executa imediatamente para preencher e calcular o estado inicial
-    atualizarCalculo();
+    function calcularValorParcela() {
+        let valorTexto = campoValorTotal.val().replace(/\./g, '').replace(',', '.');
+        let valorTotal = parseFloat(valorTexto) || 0;
+        let qtdParcelas = parseInt(campoParcelas.val()) || 1;
+
+        if (valorTotal > 0 && qtdParcelas > 0) {
+            let valorParcela = valorTotal / qtdParcelas;
+            // 🔹 arredonda para 2 casas decimais antes de formatar
+            valorParcela = Math.round(valorParcela * 100) / 100;
+
+            campoValorParcelaView.val(valorParcela.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+        } else {
+            campoValorParcelaView.val('');
+        }
+    }
+
+    campoTipo.on('change', atualizarInterface);
+    campoParcelas.on('input', calcularValorParcela);
+    campoValorTotal.on('input', calcularValorParcela);
+
+    atualizarInterface(); // executa ao carregar
 }

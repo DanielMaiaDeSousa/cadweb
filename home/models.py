@@ -1,5 +1,5 @@
 from django.db import models
-import random
+import random, string
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
@@ -112,23 +112,25 @@ class ItemPedido(models.Model):
 
 # --- PAGAMENTO ---
 class Pagamento(models.Model):
+    TIPO_CHOICES = [
+        ('a_vista', 'À Vista'),
+        ('parcelado', 'Parcelado'),
+    ]
+    
     FORMA_CHOICES = [
         ('dinheiro', 'Dinheiro'),
         ('cartao', 'Cartão'),
         ('pix', 'Pix'),
     ]
     # Nova opção de tipo de pagamento
-    TIPO_CHOICES = [
-        ('a_vista', 'À Vista'),
-        ('parcelado', 'Parcelado'),
-    ]
+    
 
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='pagamentos')
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     forma = models.CharField(max_length=20, choices=FORMA_CHOICES)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='a_vista') # Novo campo
     parcelas = models.PositiveIntegerField(default=1) # Novo campo
-    data_pagamento = models.DateTimeField(auto_now_add=True)
+    
     
     # No models.py, dentro da class Pagamento:
     @property

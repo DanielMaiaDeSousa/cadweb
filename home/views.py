@@ -239,7 +239,6 @@ def registrar_pagamento(request, pedido_id):
     if request.method == 'POST':
         data = request.POST.copy()
         
-        # Recupera valores de campos hidden caso os originais sumam no POST
         if not data.get('forma'): data['forma'] = request.POST.get('hidden_forma')
         if not data.get('tipo'): data['tipo'] = request.POST.get('hidden_tipo')
 
@@ -247,10 +246,9 @@ def registrar_pagamento(request, pedido_id):
         if form.is_valid():
             pagamento = form.save(commit=False)
             pagamento.pedido = pedido_obj
-            pagamento.save()  # Dispara o Signal de baixa de estoque
+            pagamento.save()
 
-            # REFRESH: Atualiza o objeto em memória com o status alterado pelo Signal
-            pedido_obj.refresh_from_db() 
+            pedido_obj.refresh_from_db()
 
             if pedido_obj.status == 3:
                 messages.success(request, "Pagamento total recebido. Pedido concluído!")
@@ -258,6 +256,13 @@ def registrar_pagamento(request, pedido_id):
                 messages.success(request, "Pagamento registrado com sucesso!")
 
             return redirect('registrar_pagamento', pedido_id=pedido_id)
+        
+        # COLOQUE O CÓDIGO AQUI:
+        else:
+            print("--- ERROS DO FORMULÁRIO ---")
+            print(form.errors)
+            # Opcional: mostrar uma mensagem de erro na tela para o usuário
+            messages.error(request, "Erro ao validar o pagamento. Verifique os campos.")
     
     return render(request, 'pedido/pagamento.html', {'pedido': pedido_obj, 'form': form})
 
