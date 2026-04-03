@@ -1,5 +1,7 @@
 from django.db import models
-import random, string
+import random
+from decimal import Decimal
+import locale
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
@@ -67,11 +69,11 @@ class Pedido(models.Model):
 
     @property
     def imposto_icms(self):
-        return float(self.valor_total_pedido) * 0.18 # Alíquota de 18%
+        return Decimal(self.valor_total_pedido) * Decimal('0.18') # Alíquota de 18%
 
     @property
     def imposto_ipi(self):
-        return float(self.valor_total_pedido) * 0.04 # Alíquota de 4%
+        return Decimal(self.valor_total_pedido) * Decimal('0.04') # Alíquota de 4%
 
     @property
     def data_pedidof(self):
@@ -130,6 +132,7 @@ class Pagamento(models.Model):
     forma = models.CharField(max_length=20, choices=FORMA_CHOICES)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='a_vista') # Novo campo
     parcelas = models.PositiveIntegerField(default=1) # Novo campo
+    data_pagamento = models.DateTimeField(auto_now_add=True)
     
     
     # No models.py, dentro da class Pagamento:
